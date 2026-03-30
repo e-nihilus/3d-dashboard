@@ -2,10 +2,10 @@ import React from 'react';
 
 export default function Sidebar({ items, title, version }) {
   return (
-    <aside className="hidden lg:flex flex-col p-6 gap-4 bg-slate-50/70 dark:bg-slate-950/70 backdrop-blur-3xl h-[calc(100vh-12rem)] w-64 rounded-[24px] sticky top-32 shadow-2xl shadow-teal-900/5 font-inter text-sm font-semibold tracking-wide">
+    <aside className="hidden lg:flex flex-col p-6 gap-4 bg-white/80 backdrop-blur-3xl min-h-screen w-60 sticky top-0 font-inter text-sm font-semibold tracking-wide border-r border-outline-variant/10">
       <div className="mb-6">
         <h3 className="text-primary font-headline font-extrabold text-lg">{title}</h3>
-        <p className="text-on-surface-variant text-xs font-medium opacity-60">{version}</p>
+        <p className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest opacity-60">{version}</p>
       </div>
       
       <nav className="space-y-1">
