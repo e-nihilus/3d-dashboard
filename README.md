@@ -1,70 +1,115 @@
-# Getting Started with Create React App
+# Aurea 3D - React Project
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Migración completa del diseño HTML a React con Tailwind CSS.
 
-## Available Scripts
+## 📋 Estructura del Proyecto
 
-In the project directory, you can run:
+```
+proyect-react/
+├── src/
+│   ├── components/
+│   │   ├── Navbar.jsx          # Barra de navegación reutilizable
+│   │   ├── Footer.jsx          # Pie de página reutilizable
+│   │   └── Sidebar.jsx         # Sidebar reutilizable
+│   ├── pages/
+│   │   ├── LandingPage.jsx     # Página de inicio
+│   │   ├── Dashboard.jsx       # Dashboard de modelos
+│   │   ├── Editor.jsx          # Editor 3D
+│   │   ├── ExportPanel.jsx     # Panel de exportación
+│   │   ├── UploadProcessing.jsx
+│   │   ├── ResultsEditor.jsx
+│   │   └── AdvancedOutputs.jsx
+│   ├── App.js                  # Enrutamiento principal
+│   ├── index.css               # Estilos globales
+│   └── index.js                # Punto de entrada
+├── tailwind.config.js          # Configuración de Tailwind
+├── postcss.config.js           # Configuración de PostCSS
+└── package.json
+```
 
-### `npm start`
+## 🎨 Design System - "Liquid Architect"
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Colores Principales
+- **Primary**: `#006a67` (Teal profundo)
+- **Primary Container**: `#30ada9` (Teal digital)
+- **Surface**: `#f3fafd` (Azul atmosférico)
+- **Error**: `#ba1a1a`
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Tipografía
+- **Manrope**: Headlines y displays (arquitectónico)
+- **Inter**: Body, labels y texto (técnico)
 
-### `npm test`
+### Componentes Clave
+- **Liquid Glass**: Glassmorphism con blur de 24px
+- **No-Line Rule**: Sin bordes 1px, solo cambios de color
+- **Tonal Layering**: Profundidad mediante capas de color
+- **Large Border Radius**: 24px standard, 9999px para botones
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🚀 Instalación
 
-### `npm run build`
+```bash
+cd proyect-react
+npm install
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📦 Dependencias
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- React 19.2.4
+- React Router DOM 7.13.2
+- Tailwind CSS 4.2.2
+- PostCSS 8.5.8
+- Autoprefixer 10.4.27
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🔗 Rutas Disponibles
 
-### `npm run eject`
+| Ruta | Página |
+|------|--------|
+| `/` | Landing Page |
+| `/dashboard` | Dashboard de Modelos |
+| `/editor` | Editor 3D |
+| `/export` | Panel de Exportación |
+| `/upload` | Upload & Processing |
+| `/results` | Results Editor |
+| `/advanced` | Advanced Outputs |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🎯 Características Implementadas
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+✅ Navbar reutilizable con navegación
+✅ Landing page completa con hero section
+✅ Dashboard con grid de modelos
+✅ Editor 3D con viewport
+✅ Panel de exportación con opciones
+✅ Footer reutilizable
+✅ Sidebar para controles
+✅ Diseño responsive
+✅ Estilos Tailwind CSS
+✅ Enrutamiento con React Router
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 📝 Próximos Pasos
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- [ ] Integrar componentes 3D (Three.js o Babylon.js)
+- [ ] Implementar lógica de autenticación
+- [ ] Conectar APIs backend
+- [ ] Agregar formularios funcionales
+- [ ] Implementar upload de archivos
+- [ ] Agregar temas dark/light
+- [ ] Optimizar imágenes
+- [ ] Testing unitario
 
-## Learn More
+## 🛠️ Desarrollo
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+# Iniciar servidor de desarrollo
+npm start
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Build para producción
+npm run build
 
-### Code Splitting
+# Tests
+npm test
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 📄 Licencia
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Aurea 3D - The Liquid Architect System © 2024
