@@ -21,19 +21,19 @@ export default function LandingPage() {
             </div>
             
             <h1 className="text-5xl md:text-7xl font-headline font-extrabold text-on-surface leading-[1.1] tracking-tight">
-              Un activo. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">Resultados infinitos.</span>
+              One asset. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">Infinite results.</span>
             </h1>
             
             <p className="text-lg md:text-xl text-on-surface-variant max-w-xl font-medium leading-relaxed">
-              Aurea 3D for Branding transforma simples fotografías en activos espaciales de alta fidelidad. Crea contenido visual ilimitado para eCommerce y AR en segundos.
+              Aurea 3D for Branding transforms simple photographs into high-fidelity spatial assets. Create unlimited visual content for eCommerce and AR in seconds.
             </p>
             
             <div className="flex flex-wrap gap-4 pt-4">
               <Link to="/dashboard" className="bg-primary text-on-primary px-8 py-4 rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-primary/30 transition-all scale-100 active:scale-95">
-                Empezar Ahora
+                Get Started Now
               </Link>
               <button className="bg-white/50 backdrop-blur-md text-on-surface border border-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/80 transition-all">
-                Ver Demo
+                View Demo
               </button>
             </div>
           </div>
@@ -74,8 +74,8 @@ export default function LandingPage() {
               <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
               </div>
-              <h3 className="text-2xl font-headline font-bold mb-2">Comienza la magia</h3>
-              <p className="text-on-surface-variant font-medium">Arrastra tus fotos o vídeos de productos aquí</p>
+              <h3 className="text-2xl font-headline font-bold mb-2">The magic begins</h3>
+              <p className="text-on-surface-variant font-medium">Drag your photos or videos here</p>
             </div>
           </div>
         </section>
@@ -83,30 +83,30 @@ export default function LandingPage() {
         {/* How it Works */}
         <section className="py-24 space-y-20">
           <div className="text-center space-y-4">
-            <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">Flujo de Trabajo Líquido</h2>
-            <p className="text-on-surface-variant max-w-2xl mx-auto font-medium text-lg">De lo físico a lo digital en tres pasos visuales.</p>
+            <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">Liquid Workflow</h2>
+            <p className="text-on-surface-variant max-w-2xl mx-auto font-medium text-lg">From physical to digital in three visual steps.</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-12">
             {[
               {
                 num: '01',
-                title: 'Subes contenido',
-                desc: 'Usa tu smartphone para capturar un vídeo de 15 segundos o una serie de fotos de tu producto de lujo.',
+                title: 'Upload Content',
+                desc: 'Use your smartphone to capture a 15-second video or a series of photos of your luxury product.',
                 icon: 'cloud_upload',
                 img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5tnW-zGkGu-9aRNbfpTL31rlljiacw3rENquSIctMWL1WzymXGJSUKzT7zeqSzna7gYjCI_zM4w94MDTvsuxOSP9FHHuegw7y5Ws0e_nyrC8siV7YCkeGZGj0ao18Up-BlQOcORqiGFcx3B7LCjh0G74_YysI_Wla9Zr1bigI1-P8GcZLSHErehkm7j5hxq3hMsUdm-2ZUxhobe4kZlbdtkiLu4HJaqEBaIMeQ5mE_vyaDvm0PnzbGD__7wvyrR__73bG1Gnkx4Y'
               },
               {
                 num: '02',
-                title: 'IA genera el modelo',
-                desc: 'Nuestra IA reconstructiva procesa los datos para crear una malla fotorrealista con texturas 8K automáticas.',
+                title: 'AI Generates Model',
+                desc: 'Our reconstructive AI processes the data to create a photorealistic mesh with automatic 8K textures.',
                 icon: 'smart_toy',
                 img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCX_Xwg61Z7AygefPV7VV63vJzO007thF44_cpeuOboMPG12ONYUQ3yBvdicdlfKhknRPc0GEojnGQU9NyI3DqCsTBclENZC4f_5CfoFkfnWdHzalM8GeCXoKEeCW8UvhbQJIiRIU4eKP_26XusQFPST0R1FAI87eGY6Ci2Lb3fDWdEti-zsXuhvXGUQestr_1_dXVJm-iCVIXEbWBrjsVnul1e00XbCrt59b2uIrSQCDOtxyu9umMOw2gC6RGIhxE16H7Ap6j-ekM'
               },
               {
                 num: '03',
-                title: 'Exportas',
-                desc: 'Obtén archivos listos para Shopify, Instagram AR, o renders cinematográficos para campañas de marketing.',
+                title: 'Export',
+                desc: 'Get files ready for Shopify, Instagram AR, or cinematic renders for marketing campaigns.',
                 icon: 'download',
                 img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAo_KMdhrpeo_vJFQgdM3-6rO9jWvPZBWhsWiLX7iHD4eNTz3rGcLdCZko1pF3DJs3mMPdlcCzOWah_dJxajV90hqWlWHFloRVEX82nWYmCWckrcJI1WZezX7XVHrFDuBTedYd4EHRD_oJpfChMWAnLa_uuomZo2P_SDzDI0cwXeTxki3Zg7jXMnXiYlSCBzrVNR_P9UioEDV-jCReEe6y1NAKO9KwZGrTSpGQqYwSIWqt0y96esE1FarLZIVQqZaS6o2GhVzELaTo'
               }
@@ -134,16 +134,22 @@ export default function LandingPage() {
         <section className="py-24 bg-white/40 backdrop-blur-xl -mx-6 px-6 rounded-[3rem] border border-white/20">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
             <div className="max-w-xl space-y-4">
-              <h2 className="text-4xl font-headline font-extrabold tracking-tight">Industrias que escalan con 3D</h2>
-              <p className="text-on-surface-variant font-medium text-lg leading-relaxed">Aurea 3D for Branding es la herramienta definitiva para directores creativos y equipos de eCommerce.</p>
+              <h2 className="text-4xl font-headline font-extrabold tracking-tight">Industries That Scale with 3D</h2>
+              <p className="text-on-surface-variant font-medium text-lg leading-relaxed">Aurea 3D for Branding is the ultimate tool for creative directors and eCommerce teams.</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-            {['shopping_bag', 'checkroom', 'chair', 'watch', 'diamond'].map((icon, idx) => (
+            {[
+              { icon: 'shopping_bag', label: 'Ecommerce' },
+              { icon: 'checkroom', label: 'Fashion' },
+              { icon: 'chair', label: 'Interiors' },
+              { icon: 'watch', label: 'Luxury' },
+              { icon: 'diamond', label: 'Branding' }
+            ].map((item, idx) => (
               <div key={idx} className="bg-white/60 p-8 rounded-2xl text-center space-y-4 hover:-translate-y-2 transition-all shadow-sm border border-white">
-                <div className="text-primary"><span className="material-symbols-outlined text-4xl">{icon}</span></div>
-                <span className="block font-bold font-headline uppercase text-xs tracking-widest">Industria {idx + 1}</span>
+                <div className="text-primary"><span className="material-symbols-outlined text-4xl">{item.icon}</span></div>
+                <span className="block font-bold font-headline uppercase text-xs tracking-widest">{item.label}</span>
               </div>
             ))}
           </div>
@@ -155,14 +161,14 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-transparent pointer-events-none"></div>
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary rounded-full blur-[160px] opacity-20"></div>
             <h2 className="text-4xl md:text-6xl font-headline font-extrabold max-w-3xl mb-8 relative z-10 leading-tight">
-              El futuro del branding es tridimensional. Únete hoy.
+              The future of 3D branding is here. Join today.
             </h2>
             <div className="flex flex-wrap gap-6 relative z-10">
               <Link to="/dashboard" className="bg-primary text-white px-10 py-5 rounded-full font-bold text-lg hover:brightness-110 transition-all shadow-2xl shadow-primary/20">
-                Prueba Aurea 3D Gratis
+                Try Aurea 3D Free
               </Link>
               <button className="border border-white/20 text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-white/10 transition-all">
-                Hablar con Ventas
+                Talk to Sales
               </button>
             </div>
           </div>
