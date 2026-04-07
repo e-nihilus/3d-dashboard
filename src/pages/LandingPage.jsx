@@ -1,9 +1,57 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function LandingPage() {
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const fileInputRef = useRef(null);
+  const dragAreaRef = useRef(null);
+  const navigate = useNavigate();
+
+  const handleFileSelect = (files) => {
+    if (files.length > 0) {
+      const file = files[0];
+      // Verify it's an image
+      if (file.type.startsWith('image/')) {
+        setUploadedFile(file);
+        // Store file in sessionStorage to pass to editor
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          sessionStorage.setItem('uploadedImage', e.target.result);
+          sessionStorage.setItem('imageName', file.name);
+          navigate('/editor');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Please select an image file');
+      }
+    }
+  };
+
+  const handleInputChange = (e) => {
+    handleFileSelect(e.target.files);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragAreaRef.current?.classList.add('border-primary/80', 'bg-white/80');
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragAreaRef.current?.classList.remove('border-primary/80', 'bg-white/80');
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragAreaRef.current?.classList.remove('border-primary/80', 'bg-white/80');
+    handleFileSelect(e.dataTransfer.files);
+  };
+
   return (
     <div className="bg-surface text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
       <Navbar />
@@ -70,12 +118,26 @@ export default function LandingPage() {
         {/* Drag & Drop Zone */}
         <section className="py-12">
           <div className="bg-white/30 backdrop-blur-md p-1 rounded-3xl border border-white/20">
-            <div className="border-2 border-dashed border-primary/20 rounded-2xl p-12 text-center bg-white/50 hover:border-primary/50 transition-colors group cursor-pointer">
+            <div 
+              ref={dragAreaRef}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className="border-2 border-dashed border-primary/20 rounded-2xl p-12 text-center bg-white/50 hover:border-primary/50 transition-colors group cursor-pointer"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleInputChange}
+                className="hidden"
+              />
               <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
               </div>
               <h3 className="text-2xl font-headline font-bold mb-2">The magic begins</h3>
-              <p className="text-on-surface-variant font-medium">Drag your photos or videos here</p>
+              <p className="text-on-surface-variant font-medium">Drag your photos here</p>
             </div>
           </div>
         </section>
