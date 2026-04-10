@@ -1,7 +1,27 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
+  const location = useLocation();
+
+  const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
+
+  const NavLink = ({ to, children }) => (
+    <Link
+      to={to}
+      className={`relative pb-2 transition-all duration-300 ease-out ${
+        isActive(to)
+          ? 'text-primary font-bold'
+          : 'text-slate-600 hover:text-primary'
+      }`}
+    >
+      {children}
+      {isActive(to) && (
+        <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-primary rounded-full"></div>
+      )}
+    </Link>
+  );
+
   return (
     <nav className="bg-white/70 backdrop-blur-2xl font-manrope tracking-tight font-bold rounded-full mt-4 mx-4 md:mx-8 sticky top-4 z-50 border border-white/15 shadow-[0_40px_60px_-5px_rgba(22,29,31,0.05)] flex justify-between items-center px-6 py-3">
       <Link to="/" className="text-xl font-black text-primary tracking-tighter leading-tight">
@@ -9,8 +29,8 @@ export default function Navbar() {
       </Link>
       
       <div className="hidden md:flex gap-6 items-center">
-        <Link to="/editor" className="text-slate-600 hover:text-primary transition-all duration-300 ease-out">Editor</Link>
-        <Link to="/dashboard" className="text-primary font-bold transition-all duration-300 ease-out">Assets</Link>
+        <NavLink to="/editor">Editor</NavLink>
+        <NavLink to="/dashboard">Assets</NavLink>
         <button className="text-slate-600 hover:text-primary transition-all duration-300 ease-out bg-none border-none cursor-pointer">Community</button>
         <button className="text-slate-600 hover:text-primary transition-all duration-300 ease-out bg-none border-none cursor-pointer">Pricing</button>
       </div>

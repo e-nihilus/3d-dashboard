@@ -1,26 +1,11 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import Sidebar from '../components/Sidebar';
+import AppLayout from '../components/AppLayout';
 
 export default function ExportPanel() {
-  const sidebarItems = [
-    { label: 'Hierarchy', icon: 'layers', href: '#' },
-    { label: 'Materials', icon: 'palette', href: '#' },
-    { label: 'Lighting', icon: 'light_mode', href: '#' },
-    { label: 'Camera', icon: 'videocam', href: '#' },
-    { label: 'Render', icon: 'shutter_speed', active: true, href: '#' }
-  ];
-
   return (
-    <div className="bg-surface font-body text-on-surface">
-      <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-6 py-12 md:py-20 flex flex-col md:flex-row gap-12">
-        <Sidebar items={sidebarItems} title="Scene Architect" version="v2.4 Liquid Engine" />
-        
-        {/* Main Content */}
-        <div className="flex-1 space-y-12 pb-20">
+    <AppLayout>
+      <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
+        <div className="space-y-12 pb-20">
           {/* Header */}
           <header className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold tracking-widest text-xs uppercase">
@@ -149,8 +134,6 @@ export default function ExportPanel() {
           </section>
         </div>
       </main>
-      
-      <Footer />
-    </div>
+    </AppLayout>
   );
 }

@@ -1,11 +1,9 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import AppLayout from '../components/AppLayout';
 
 export default function AdvancedOutputs() {
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen flex flex-col">
-      <Navbar />
+    <AppLayout>
       <main className="flex-1 flex items-center justify-center max-w-7xl mx-auto w-full px-6 py-20">
         <div className="text-center space-y-8">
           <h1 className="text-4xl font-headline font-bold">Advanced Outputs</h1>
@@ -20,7 +18,6 @@ export default function AdvancedOutputs() {
           </div>
         </div>
       </main>
-      <Footer />
-    </div>
+    </AppLayout>
   );
 }

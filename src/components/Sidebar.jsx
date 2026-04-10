@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Sidebar({ items, title, version }) {
   return (
@@ -10,16 +11,16 @@ export default function Sidebar({ items, title, version }) {
       
       <nav className="space-y-1">
         {items.map((item, idx) => (
-          <a
+          <Link
             key={idx}
-            href={item.href}
+            to={item.href}
             className={`flex items-center gap-3 px-4 py-3 transition-transform duration-200 rounded-full ${
               item.active ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:translate-x-1'
             }`}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
       

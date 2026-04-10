@@ -1,16 +1,72 @@
-import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import Sidebar from '../components/Sidebar';
+import React, { useRef, useState } from 'react';
+import AppLayout from '../components/AppLayout';
 
 export default function Dashboard() {
-  const sidebarItems = [
-    { label: 'Materials', icon: 'palette', active: true, href: '#' },
-    { label: 'Hierarchy', icon: 'layers', href: '#' },
-    { label: 'Lighting', icon: 'light_mode', href: '#' },
-    { label: 'Camera', icon: 'videocam', href: '#' },
-    { label: 'Render', icon: 'shutter_speed', href: '#' }
-  ];
+  const [searchQuery, setSearchQuery] = useState('');
+  const fileInputRef = useRef(null);
+  const dragAreaRef = useRef(null);
+  const MAX_FILE_SIZE = 500 * 1024 * 1024;
+  const ALLOWED_FORMATS = ['obj', 'fbx', 'glb'];
+
+  const handleUploadClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.obj,.fbx,.glb';
+    input.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      if (!fileExtension || !ALLOWED_FORMATS.includes(fileExtension)) {
+        alert('Please select an OBJ, FBX, or GLB file');
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        alert('File size exceeds 500MB limit');
+        return;
+      }
+      console.log('Valid file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      alert(`File "${file.name}" is ready to upload`);
+    };
+    input.click();
+  };
+
+  const validateAndHandleFile = (file) => {
+    if (!file) return;
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    if (!fileExtension || !ALLOWED_FORMATS.includes(fileExtension)) {
+      alert('Please select an OBJ, FBX, or GLB file');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      alert('File size exceeds 500MB limit');
+      return;
+    }
+    console.log('Valid file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+    alert(`File "${file.name}" is ready to upload`);
+  };
+
+  const handleInputChange = (e) => {
+    validateAndHandleFile(e.target.files?.[0]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragAreaRef.current?.classList.add('border-primary/80', 'bg-primary/20');
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragAreaRef.current?.classList.remove('border-primary/80', 'bg-primary/20');
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragAreaRef.current?.classList.remove('border-primary/80', 'bg-primary/20');
+    validateAndHandleFile(e.dataTransfer.files?.[0]);
+  };
 
   const models = [
     {
@@ -47,32 +103,50 @@ export default function Dashboard() {
     }
   ];
 
+  const filteredModels = models.filter((model) =>
+    model.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen flex">
-      <Sidebar items={sidebarItems} title="Materials" version="V2.4 LIQUID ENGINE" />
-      
-      <div className="flex-1 flex flex-col min-h-screen">
-        <Navbar />
-        
-        <main className="flex-1 p-4 md:p-8 max-w-6xl w-full">
+    <AppLayout>
+      <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           <section className="space-y-8 pb-20">
-            {/* Header */}
-            <header className="flex items-start justify-between">
-              <div className="space-y-4">
-                <h1 className="font-headline text-5xl font-extrabold text-on-surface tracking-tighter mb-2">Tus modelos</h1>
-                <p className="text-on-surface-variant font-medium max-w-lg leading-relaxed">
-                  Gestiona tus creaciones arquitectónicas en alta fidelidad. Renderiza, edita y exporta tus escenas líquidas.
+            {/* Header with search + upload */}
+            <header className="flex items-center justify-between gap-4">
+              <div>
+                <h1 className="font-headline text-4xl font-extrabold text-on-surface tracking-tighter mb-1">Your Models</h1>
+                <p className="text-on-surface-variant font-medium text-sm leading-relaxed">
+                  Manage your architectural creations in high fidelity.
                 </p>
               </div>
-              <button className="bg-primary-container text-on-primary-container flex items-center gap-3 px-8 py-4 rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(48,173,169,0.3)] hover:brightness-105 transition-all active:scale-95 group">
-                <span className="material-symbols-outlined group-hover:rotate-90 transition-transform">add</span>
-                Upload New
-              </button>
+
+              <div className="flex items-center gap-3">
+                {/* Search Bar */}
+                <div className="flex items-center bg-slate-100/80 rounded-full px-4 py-2.5 gap-2 border border-slate-200/60 focus-within:border-primary/40 focus-within:bg-white transition-all">
+                  <span className="material-symbols-outlined text-slate-400 text-lg">search</span>
+                  <input
+                    type="text"
+                    placeholder="Search models..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent border-none outline-none text-sm font-medium text-on-surface placeholder:text-slate-400 w-44"
+                  />
+                </div>
+
+                {/* Upload Button */}
+                <button
+                  onClick={handleUploadClick}
+                  className="bg-primary-container text-on-primary-container flex items-center gap-2 px-6 py-2.5 rounded-full font-bold shadow-[0_10px_30px_-8px_rgba(48,173,169,0.3)] hover:brightness-105 transition-all active:scale-95 text-sm whitespace-nowrap"
+                >
+                  <span className="material-symbols-outlined text-lg">add</span>
+                  Upload New
+                </button>
+              </div>
             </header>
 
             {/* Grid of Models */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {models.map((model) => (
+              {filteredModels.map((model) => (
                 <div key={model.id} className="glass-card rounded-lg p-4 group cursor-pointer hover:translate-y-[-4px] transition-all duration-300">
                   <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-surface-container-high flex items-center justify-center">
                     {model.status === 'Processing' ? (
@@ -99,9 +173,9 @@ export default function Dashboard() {
                       </>
                     ) : (
                       <>
-                        <img 
-                          alt={model.title} 
-                          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100" 
+                        <img
+                          alt={model.title}
+                          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100"
                           src={model.img}
                         />
                         <div className="absolute top-3 right-3 bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5">
@@ -110,13 +184,13 @@ export default function Dashboard() {
                       </>
                     )}
                   </div>
-                  
+
                   <div className="px-2">
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="font-headline font-bold text-lg">{model.title}</h3>
                       <span className="material-symbols-outlined text-on-surface-variant text-sm">more_vert</span>
                     </div>
-                    
+
                     {model.status === 'Error' ? (
                       <>
                         <p className="text-xs text-error font-medium mb-2 flex items-center gap-2">
@@ -135,7 +209,7 @@ export default function Dashboard() {
                           </span>
                           {model.edited}
                         </p>
-                        
+
                         <div className="flex items-center gap-2">
                           {model.tags.map((tag, idx) => (
                             <span key={idx} className="text-[10px] bg-surface-container-high px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-on-surface-variant">
@@ -148,9 +222,23 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-              
+
               {/* Upload Placeholder */}
-              <div className="rounded-lg p-8 border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center text-center gap-4 group cursor-pointer hover:bg-primary/10 transition-all">
+              <div
+                ref={dragAreaRef}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className="rounded-lg p-8 border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center text-center gap-4 group cursor-pointer hover:bg-primary/10 transition-all"
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".obj,.fbx,.glb"
+                  onChange={handleInputChange}
+                  className="hidden"
+                />
                 <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg shadow-primary/5 group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
                 </div>
@@ -162,15 +250,6 @@ export default function Dashboard() {
             </div>
           </section>
         </main>
-        
-        <Footer />
-      </div>
-
-      {/* Quick Render FAB */}
-      <button className="fixed bottom-8 right-8 bg-primary text-white flex items-center gap-3 px-6 py-4 rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(48,173,169,0.4)] hover:brightness-110 transition-all active:scale-95 z-50">
-        <span className="material-symbols-outlined">bolt</span>
-        Quick Render
-      </button>
-    </div>
+    </AppLayout>
   );
 }

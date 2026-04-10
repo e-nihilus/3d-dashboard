@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import AppLayout from '../components/AppLayout';
 
 export default function LandingPage() {
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -12,8 +11,8 @@ export default function LandingPage() {
   const handleFileSelect = (files) => {
     if (files.length > 0) {
       const file = files[0];
-      // Verify it's an image
-      if (file.type.startsWith('image/')) {
+      // Verify it's an image or video
+      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
         setUploadedFile(file);
         // Store file in sessionStorage to pass to editor
         const reader = new FileReader();
@@ -24,7 +23,7 @@ export default function LandingPage() {
         };
         reader.readAsDataURL(file);
       } else {
-        alert('Please select an image file');
+        alert('Please select an image or video file');
       }
     }
   };
@@ -53,10 +52,8 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-surface text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
-      <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-6">
+    <AppLayout>
+      <main className="max-w-7xl mx-auto px-6 selection:bg-primary-container selection:text-on-primary-container">
         {/* Hero Section */}
         <section className="py-20 md:py-32 grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
@@ -120,7 +117,11 @@ export default function LandingPage() {
           <div className="bg-white/30 backdrop-blur-md p-1 rounded-3xl border border-white/20">
             <div 
               ref={dragAreaRef}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                if (fileInputRef.current) {
+                  fileInputRef.current.click();
+                }
+              }}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -129,7 +130,7 @@ export default function LandingPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 onChange={handleInputChange}
                 className="hidden"
               />
@@ -137,7 +138,7 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
               </div>
               <h3 className="text-2xl font-headline font-bold mb-2">The magic begins</h3>
-              <p className="text-on-surface-variant font-medium">Drag your photos here</p>
+              <p className="text-on-surface-variant font-medium">Drag your photos or videos here</p>
             </div>
           </div>
         </section>
@@ -236,8 +237,6 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-      
-      <Footer />
-    </div>
+    </AppLayout>
   );
 }
