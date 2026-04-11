@@ -6,11 +6,8 @@ const sidebarIcons = [
   { icon: 'language', to: '/', tooltip: 'Aurea3D' },
   { icon: 'view_in_ar', to: '/dashboard', tooltip: 'Assets' },
   { icon: 'edit_square', to: '/editor', tooltip: 'Editor' },
-  { icon: 'upload_file', to: '/upload', tooltip: 'Upload' },
   { icon: 'movie', to: '/editor/render', tooltip: 'Render' },
   { icon: 'ios_share', to: '/export', tooltip: 'Export' },
-  { icon: 'tune', to: '/advanced', tooltip: 'Advanced' },
-  { icon: 'verified', to: '/results', tooltip: 'Results' },
 ];
 
 const tabs = [

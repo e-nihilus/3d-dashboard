@@ -1,36 +1,33 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
+import ModelPreview from '../components/ModelPreview';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const fileInputRef = useRef(null);
+  const nextIdRef = useRef(3);
   const dragAreaRef = useRef(null);
+  const API_URL = 'http://localhost:3001/api';
+
+  const formatDate = (isoString) => {
+    const diff = Date.now() - new Date(isoString).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `Edited ${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `Edited ${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'Last active yesterday';
+    return `Edited ${days}d ago`;
+  };
   const MAX_FILE_SIZE = 500 * 1024 * 1024;
   const ALLOWED_FORMATS = ['obj', 'fbx', 'glb'];
 
-  const handleUploadClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.obj,.fbx,.glb';
-    input.onchange = (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
-      if (!fileExtension || !ALLOWED_FORMATS.includes(fileExtension)) {
-        alert('Please select an OBJ, FBX, or GLB file');
-        return;
-      }
-      if (file.size > MAX_FILE_SIZE) {
-        alert('File size exceeds 500MB limit');
-        return;
-      }
-      console.log('Valid file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
-      alert(`File "${file.name}" is ready to upload`);
-    };
-    input.click();
-  };
-
-  const validateAndHandleFile = (file) => {
+  const addModelFromFile = async (file) => {
     if (!file) return;
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     if (!fileExtension || !ALLOWED_FORMATS.includes(fileExtension)) {
@@ -41,12 +38,32 @@ export default function Dashboard() {
       alert('File size exceeds 500MB limit');
       return;
     }
-    console.log('Valid file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
-    alert(`File "${file.name}" is ready to upload`);
+    const formData = new FormData();
+    formData.append('model', file);
+    try {
+      const res = await fetch(`${API_URL}/models/upload`, { method: 'POST', body: formData });
+      const newModel = await res.json();
+      if (res.ok) {
+        newModel.modelPath = `http://localhost:3001${newModel.modelPath}`;
+        setModels((prev) => [...prev, newModel]);
+      } else {
+        alert(newModel.error || 'Upload failed');
+      }
+    } catch {
+      alert('Could not connect to server. Make sure the API server is running.');
+    }
+  };
+
+  const handleUploadClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.obj,.fbx,.glb';
+    input.onchange = (e) => addModelFromFile(e.target.files?.[0]);
+    input.click();
   };
 
   const handleInputChange = (e) => {
-    validateAndHandleFile(e.target.files?.[0]);
+    addModelFromFile(e.target.files?.[0]);
   };
 
   const handleDragOver = (e) => {
@@ -65,43 +82,62 @@ export default function Dashboard() {
     e.preventDefault();
     e.stopPropagation();
     dragAreaRef.current?.classList.remove('border-primary/80', 'bg-primary/20');
-    validateAndHandleFile(e.dataTransfer.files?.[0]);
+    addModelFromFile(e.dataTransfer.files?.[0]);
   };
 
-  const models = [
-    {
-      id: 1,
-      title: 'Skyline Penthouse',
-      status: 'Ready',
-      edited: 'Edited 2h ago',
-      tags: ['ArchViz', '4K RT'],
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaifKZzpiyjAdFD-tIYZ3t0vsPBw11DRFjHTXgaj9jEjTRplWJCb9hixB271YrnovnGtabhedbfgSX-lvblfmywRt-hvFa1vNNeOmWazVaWPftE19ciCvq-ayYhZC0rQEFl-fGDXPt4E6n3erIBLIpDbCU1TyKDp0aePZjrKATZocF-ukqEhOsT8vRCcl-zH5u1X3FJy9CxN8qLO-XRdZnufcbESJ5HAezx8uGwXS9QrwWR8_ENiCh78DrtNluNeW7caljb8GHZ4Y'
-    },
-    {
-      id: 2,
-      title: 'Cyberpunk District',
-      status: 'Processing',
-      edited: 'Started 15m ago',
-      progress: 74,
-      tags: ['Environment']
-    },
-    {
-      id: 3,
-      title: 'Industrial Turbine',
-      status: 'Error',
-      error: 'Failed to verify geometry',
-      tags: [],
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBhz8RGR1rBT4J4RTzcSVth-IS-SQyuKBKiUViGuF9bEwNhbU5RF5FLSdx31_eYxtxh9bgaI9pNZaQJONREH7rjn2pDDGjRY22kil73kbodkIjFKLDBaLwWXdJQuVacIcGbG_g3I1aep4z-18MQbVeZUzBRfOPwxP8TZXLWiQ1g08QDygqA_cXJSr1BaI7Dh3gI2lPHGS5Mq0pd7GkwQ_UNVIplVNlh0wZz-arC3-P-tFGiHL8YyrWtPgOqmYpuB8FqMUUv27WWTQc'
-    },
-    {
-      id: 4,
-      title: 'Proto-E Roadster',
-      status: 'Ready',
-      edited: 'Last active yesterday',
-      tags: ['Product'],
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDXUhN5IHBr18gjXPurGiugmPLpdOepTZHo48T6QTGpyf6UAwJNQJ7RWs8iE47XE-L0TmuUDEKQgn29fC-E8M0dYQsVfUb4KHlOm649GhmO3ambvG5kWaDxAMfCgNPvIL74yiLQZf_Rin4A2ORn5UJqfreZz3RN2mKwrExWTCuWMmLzeCP68QwP9SrTcwKtECsbrcFwoZmLMmULN0a0JZLydtiOhTtL6-eHtl_dhRpgaS1YiUNyyzyja7a7yPXNp7mxB7g8SOWfOOk'
+  const [models, setModels] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/models`)
+      .then((res) => res.json())
+      .then((data) => {
+        const withFullPath = data.map((m) => ({
+          ...m,
+          modelPath: `http://localhost:3001${m.modelPath}`,
+        }));
+        setModels(withFullPath);
+      })
+      .catch(() => console.error('Could not fetch models from API'));
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const handleDelete = (id) => {
+    setOpenMenuId(null);
+    setDeleteConfirm(id);
+  };
+
+  const confirmDelete = async () => {
+    const model = models.find((m) => m.id === deleteConfirm);
+    if (model?.fileName) {
+      try {
+        await fetch(`${API_URL}/models/${encodeURIComponent(model.fileName)}`, { method: 'DELETE' });
+      } catch {
+        alert('Could not connect to server.');
+      }
     }
-  ];
+    setModels((prev) => prev.filter((m) => m.id !== deleteConfirm));
+    setDeleteConfirm(null);
+  };
+
+  const handleEdit = (model) => {
+    setOpenMenuId(null);
+    navigate(`/editor?model=${encodeURIComponent(model.modelPath)}&title=${encodeURIComponent(model.title)}`);
+  };
+
+  const handleDownload = (model) => {
+    setOpenMenuId(null);
+    const link = document.createElement('a');
+    link.href = model.modelPath;
+    link.download = model.modelPath.split('/').pop();
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const filteredModels = models.filter((model) =>
     model.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -148,77 +184,73 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredModels.map((model) => (
                 <div key={model.id} className="glass-card rounded-lg p-4 group cursor-pointer hover:translate-y-[-4px] transition-all duration-300">
-                  <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-surface-container-high flex items-center justify-center">
-                    {model.status === 'Processing' ? (
+                  <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                    {model.modelPath ? (
                       <>
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
-                        <div className="flex flex-col items-center gap-3 relative z-10">
-                          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                          <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Processing Assets</span>
-                        </div>
-                        <div className="absolute top-3 right-3 bg-surface-container-highest/90 backdrop-blur-md text-on-surface-variant text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                          {model.progress} %
-                        </div>
-                      </>
-                    ) : model.status === 'Error' ? (
-                      <>
-                        <img alt="Error" className="absolute inset-0 w-full h-full object-cover opacity-20 contrast-125 blur-sm" src={model.img} />
-                        <div className="flex flex-col items-center gap-2 relative z-10 text-error">
-                          <span className="material-symbols-outlined text-4xl">warning</span>
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Mesh Conflict</span>
-                        </div>
-                        <div className="absolute top-3 right-3 bg-error text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                          Error
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <img
-                          alt={model.title}
-                          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100"
-                          src={model.img}
-                        />
-                        <div className="absolute top-3 right-3 bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5">
+                        <ModelPreview modelPath={model.modelPath} />
+                        <div className="absolute top-3 right-3 bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 z-10">
                           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> {model.status}
                         </div>
                       </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Loading Model</span>
+                      </div>
                     )}
                   </div>
 
                   <div className="px-2">
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="font-headline font-bold text-lg">{model.title}</h3>
-                      <span className="material-symbols-outlined text-on-surface-variant text-sm">more_vert</span>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === model.id ? null : model.id); }}
+                          className="p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-on-surface-variant text-sm">more_vert</span>
+                        </button>
+                        {openMenuId === model.id && (
+                            <div className="absolute right-0 top-8 z-30 w-44 bg-white rounded-xl shadow-xl border border-slate-200/80 p-1.5 animate-[fadeIn_0.15s_ease-out]">
+                              <button
+                                onClick={() => handleEdit(model)}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">edit</span>
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDownload(model)}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">download</span>
+                                Download
+                              </button>
+                              <div className="my-1 border-t border-slate-100"></div>
+                              <button
+                                onClick={() => handleDelete(model.id)}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                                Delete
+                              </button>
+                            </div>
+                        )}
+                      </div>
                     </div>
 
-                    {model.status === 'Error' ? (
-                      <>
-                        <p className="text-xs text-error font-medium mb-2 flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[14px]">error</span>
-                          {model.error}
-                        </p>
-                        <button className="text-xs text-primary font-bold uppercase tracking-widest hover:underline bg-none border-none cursor-pointer p-0">
-                          Retry Upload
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-xs text-on-surface-variant font-medium mb-4 flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[14px]">
-                            {model.status === 'Processing' ? 'schedule' : 'update'}
-                          </span>
-                          {model.edited}
-                        </p>
+                    <p className="text-xs text-on-surface-variant font-medium mb-4 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[14px]">update</span>
+                      {formatDate(model.edited)}
+                    </p>
 
-                        <div className="flex items-center gap-2">
-                          {model.tags.map((tag, idx) => (
-                            <span key={idx} className="text-[10px] bg-surface-container-high px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-on-surface-variant">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {model.tags.map((tag, idx) => (
+                        <span key={idx} className="text-[10px] bg-surface-container-high px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-on-surface-variant">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -250,6 +282,37 @@ export default function Dashboard() {
             </div>
           </section>
         </main>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 animate-[fadeIn_0.15s_ease-out]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-red-600">delete</span>
+              </div>
+              <h3 className="font-headline font-bold text-lg text-on-surface">Delete Model</h3>
+            </div>
+            <p className="text-sm text-on-surface-variant mb-6">
+              Are you sure you want to delete this model? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-5 py-2.5 rounded-full text-sm font-bold text-on-surface hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-5 py-2.5 rounded-full text-sm font-bold bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
