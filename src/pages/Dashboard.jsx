@@ -148,15 +148,15 @@ export default function Dashboard() {
       <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           <section className="space-y-8 pb-20">
             {/* Header with search + upload */}
-            <header className="flex items-center justify-between gap-4">
+            <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <h1 className="font-headline text-4xl font-extrabold text-on-surface tracking-tighter mb-1">Your Models</h1>
+                <h1 className="font-headline text-2xl md:text-4xl font-extrabold text-on-surface tracking-tighter mb-1">Your Models</h1>
                 <p className="text-on-surface-variant font-medium text-sm leading-relaxed">
                   Manage your architectural creations in high fidelity.
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-3">
                 {/* Search Bar */}
                 <div className="flex items-center bg-slate-100/80 rounded-full px-4 py-2.5 gap-2 border border-slate-200/60 focus-within:border-primary/40 focus-within:bg-white transition-all">
                   <span className="material-symbols-outlined text-slate-400 text-lg">search</span>
@@ -179,6 +179,40 @@ export default function Dashboard() {
                 </button>
               </div>
             </header>
+
+            {/* Mobile Search Bar */}
+            <div className="md:hidden">
+              <div className="flex items-center bg-surface-container-high rounded-full px-5 py-3.5 focus-within:ring-2 focus-within:ring-primary shadow-sm">
+                <span className="material-symbols-outlined text-on-surface-variant text-xl">search</span>
+                <input
+                  type="text"
+                  placeholder="Search models, scenes or assets..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-on-surface placeholder:text-on-surface-variant mx-3"
+                />
+                <span className="material-symbols-outlined text-on-surface-variant text-xl">tune</span>
+              </div>
+            </div>
+
+            {/* Mobile Quick Actions */}
+            <div className="grid grid-cols-2 gap-4 md:hidden">
+              <div
+                onClick={handleUploadClick}
+                className="glass-card p-6 rounded-lg flex flex-col items-center justify-center text-center space-y-3 cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center">
+                  <span className="material-symbols-outlined text-on-primary-container text-2xl">cloud_upload</span>
+                </div>
+                <span className="text-sm font-bold text-on-surface">Upload Model</span>
+              </div>
+              <div className="glass-card p-6 rounded-lg flex flex-col items-center justify-center text-center space-y-3 cursor-pointer">
+                <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center">
+                  <span className="material-symbols-outlined text-on-secondary-container text-2xl">photo_camera</span>
+                </div>
+                <span className="text-sm font-bold text-on-surface">Camera Scan</span>
+              </div>
+            </div>
 
             {/* Grid of Models */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -282,6 +316,14 @@ export default function Dashboard() {
             </div>
           </section>
         </main>
+
+      {/* Mobile FAB */}
+      <button
+        onClick={handleUploadClick}
+        className="md:hidden fixed bottom-24 right-6 z-40 w-16 h-16 rounded-full bg-primary text-on-primary shadow-2xl flex items-center justify-center active:scale-95 transition-transform"
+      >
+        <span className="material-symbols-outlined text-3xl">add</span>
+      </button>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm !== null && (

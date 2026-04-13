@@ -55,8 +55,8 @@ export default function LandingPage() {
     <AppLayout>
       <main className="max-w-7xl mx-auto px-6 selection:bg-primary-container selection:text-on-primary-container">
         {/* Hero Section */}
-        <section className="py-20 md:py-32 grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8">
+        <section className="py-20 md:py-32 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="space-y-8 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold uppercase tracking-widest">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -65,19 +65,19 @@ export default function LandingPage() {
               Aurea Engine v2.4
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-headline font-extrabold text-on-surface leading-[1.1] tracking-tight">
-              One asset. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">Infinite results.</span>
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-headline font-extrabold text-on-surface leading-[1.1] tracking-tight">
+              One asset. <br /> <span className="text-glow text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">Infinite results.</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-on-surface-variant max-w-xl font-medium leading-relaxed">
+            <p className="text-lg md:text-xl text-on-surface-variant max-w-xl mx-auto lg:mx-0 font-medium leading-relaxed">
               Aurea 3D for Branding transforms simple photographs into high-fidelity spatial assets. Create unlimited visual content for eCommerce and AR in seconds.
             </p>
             
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Link to="/dashboard" className="bg-primary text-on-primary px-8 py-4 rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-primary/30 transition-all scale-100 active:scale-95">
+            <div className="flex flex-col md:flex-row gap-4 pt-4">
+              <Link to="/dashboard" className="bg-primary text-on-primary px-8 py-5 md:py-4 rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-primary/30 transition-all scale-100 active:scale-95 w-full md:w-auto text-center">
                 Get Started Now
               </Link>
-              <button className="bg-white/50 backdrop-blur-md text-on-surface border border-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/80 transition-all">
+              <button className="bg-white/50 backdrop-blur-md text-on-surface border border-white px-8 py-5 md:py-4 rounded-full font-bold text-lg hover:bg-white/80 transition-all w-full md:w-auto">
                 View Demo
               </button>
             </div>
@@ -102,10 +102,16 @@ export default function LandingPage() {
               </div>
               
               {/* Stats Overlay */}
-              <div className="absolute bottom-10 right-10 z-20">
-                <div className="liquid-glass px-6 py-4 rounded-2xl border border-white/40 shadow-xl space-y-1">
+              <div className="absolute bottom-4 right-4 md:bottom-10 md:right-10 z-20">
+                <div className="liquid-glass px-4 py-3 md:px-6 md:py-4 rounded-2xl border border-white/40 shadow-xl space-y-1">
                   <div className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Live Rendering</div>
-                  <div className="text-2xl font-black text-on-surface">4K Textures</div>
+                  <div className="text-lg md:text-2xl font-black text-on-surface">4K Textures</div>
+                </div>
+              </div>
+              {/* AR Ready label */}
+              <div className="absolute top-4 right-4 md:top-10 md:right-10 z-20">
+                <div className="liquid-glass px-4 py-2 rounded-full border border-white/40 shadow-xl">
+                  <span className="text-xs font-bold text-primary uppercase tracking-widest">AR Ready</span>
                 </div>
               </div>
             </div>
@@ -125,7 +131,7 @@ export default function LandingPage() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className="border-2 border-dashed border-primary/20 rounded-2xl p-12 text-center bg-white/50 hover:border-primary/50 transition-colors group cursor-pointer"
+              className="border-2 border-dashed border-primary/20 rounded-2xl p-8 md:p-12 text-center bg-white/50 hover:border-primary/50 transition-colors group cursor-pointer"
             >
               <input
                 ref={fileInputRef}
@@ -137,7 +143,7 @@ export default function LandingPage() {
               <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
               </div>
-              <h3 className="text-2xl font-headline font-bold mb-2">The magic begins</h3>
+              <h3 className="text-xl md:text-2xl font-headline font-bold mb-2">The magic begins</h3>
               <p className="text-on-surface-variant font-medium">Drag your photos or videos here</p>
             </div>
           </div>
@@ -150,8 +156,8 @@ export default function LandingPage() {
             <p className="text-on-surface-variant max-w-2xl mx-auto font-medium text-lg">From physical to digital in three visual steps.</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-12">
-            {[
+          {(() => {
+            const steps = [
               {
                 num: '01',
                 title: 'Upload Content',
@@ -173,24 +179,47 @@ export default function LandingPage() {
                 icon: 'download',
                 img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAo_KMdhrpeo_vJFQgdM3-6rO9jWvPZBWhsWiLX7iHD4eNTz3rGcLdCZko1pF3DJs3mMPdlcCzOWah_dJxajV90hqWlWHFloRVEX82nWYmCWckrcJI1WZezX7XVHrFDuBTedYd4EHRD_oJpfChMWAnLa_uuomZo2P_SDzDI0cwXeTxki3Zg7jXMnXiYlSCBzrVNR_P9UioEDV-jCReEe6y1NAKO9KwZGrTSpGQqYwSIWqt0y96esE1FarLZIVQqZaS6o2GhVzELaTo'
               }
-            ].map((step, idx) => (
-              <div key={idx} className="space-y-6 group">
-                <div className="relative rounded-3xl overflow-hidden aspect-square shadow-xl border border-white/20">
-                  <img 
-                    alt={step.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                    src={step.img}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-6 left-6 text-white">
-                    <span className="text-4xl font-black opacity-50 block">{step.num}</span>
-                    <h4 className="text-2xl font-bold font-headline">{step.title}</h4>
-                  </div>
+            ];
+            return (
+              <>
+                {/* Mobile: simplified horizontal cards */}
+                <div className="space-y-4 md:hidden">
+                  {steps.map((step, idx) => (
+                    <div key={idx} className="bg-white/60 p-6 rounded-lg flex items-center gap-5 border border-white/20">
+                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-black text-lg">{idx + 1}</span>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold font-headline">{step.title}</h4>
+                        <p className="text-on-surface-variant text-sm font-medium leading-relaxed">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-on-surface-variant leading-relaxed px-2 font-medium">{step.desc}</p>
-              </div>
-            ))}
-          </div>
+
+                {/* Desktop: image cards grid */}
+                <div className="hidden md:grid md:grid-cols-3 gap-12">
+                  {steps.map((step, idx) => (
+                    <div key={idx} className="space-y-6 group">
+                      <div className="relative rounded-3xl overflow-hidden aspect-square shadow-xl border border-white/20">
+                        <img 
+                          alt={step.title} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                          src={step.img}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div className="absolute bottom-6 left-6 text-white">
+                          <span className="text-4xl font-black opacity-50 block">{step.num}</span>
+                          <h4 className="text-2xl font-bold font-headline">{step.title}</h4>
+                        </div>
+                      </div>
+                      <p className="text-on-surface-variant leading-relaxed px-2 font-medium">{step.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </section>
 
         {/* Use Cases Section */}
@@ -202,7 +231,7 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-6 md:grid md:grid-cols-5 md:gap-6">
             {[
               { icon: 'shopping_bag', label: 'Ecommerce' },
               { icon: 'checkroom', label: 'Fashion' },
@@ -210,9 +239,11 @@ export default function LandingPage() {
               { icon: 'watch', label: 'Luxury' },
               { icon: 'diamond', label: 'Branding' }
             ].map((item, idx) => (
-              <div key={idx} className="bg-white/60 p-8 rounded-2xl text-center space-y-4 hover:-translate-y-2 transition-all shadow-sm border border-white">
-                <div className="text-primary"><span className="material-symbols-outlined text-4xl">{item.icon}</span></div>
-                <span className="block font-bold font-headline uppercase text-xs tracking-widest">{item.label}</span>
+              <div key={idx} className="flex flex-col items-center gap-2 md:bg-white/60 md:p-8 md:rounded-2xl md:space-y-4 hover:-translate-y-2 transition-all md:shadow-sm md:border md:border-white">
+                <div className="w-14 h-14 rounded-full bg-white/60 md:bg-transparent md:w-auto md:h-auto flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-3xl md:text-4xl">{item.icon}</span>
+                </div>
+                <span className="block font-bold font-headline uppercase text-[10px] md:text-xs tracking-widest">{item.label}</span>
               </div>
             ))}
           </div>
@@ -226,11 +257,11 @@ export default function LandingPage() {
             <h2 className="text-4xl md:text-6xl font-headline font-extrabold max-w-3xl mb-8 relative z-10 leading-tight">
               The future of 3D branding is here. Join today.
             </h2>
-            <div className="flex flex-wrap gap-6 relative z-10">
-              <Link to="/dashboard" className="bg-primary text-white px-10 py-5 rounded-full font-bold text-lg hover:brightness-110 transition-all shadow-2xl shadow-primary/20">
+            <div className="flex flex-col md:flex-row gap-6 relative z-10 w-full md:w-auto">
+              <Link to="/dashboard" className="bg-primary text-white px-10 py-5 rounded-full font-bold text-lg hover:brightness-110 transition-all shadow-2xl shadow-primary/20 w-full md:w-auto text-center">
                 Try Aurea 3D Free
               </Link>
-              <button className="border border-white/20 text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-white/10 transition-all">
+              <button className="border border-white/20 text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-white/10 transition-all w-full md:w-auto">
                 Talk to Sales
               </button>
             </div>

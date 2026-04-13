@@ -39,3 +39,15 @@ html {
 .viewport-bg {
   background: radial-gradient(circle at center, #eef5f8 0%, #d4dbde 100%);
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgba(48, 173, 169, 0.3);
+}
