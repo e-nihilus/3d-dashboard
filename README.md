@@ -10,6 +10,7 @@ proyect-react/
 │   ├── components/
 │   │   ├── Navbar.jsx          # Barra de navegación reutilizable
 │   │   ├── Footer.jsx          # Pie de página reutilizable
+│   │   ├── ModelPreview.jsx    # Preview 3D de modelos
 │   │   └── Sidebar.jsx         # Sidebar reutilizable
 │   ├── pages/
 │   │   ├── LandingPage.jsx     # Página de inicio
@@ -22,6 +23,9 @@ proyect-react/
 │   ├── App.js                  # Enrutamiento principal
 │   ├── index.css               # Estilos globales
 │   └── index.js                # Punto de entrada
+├── public/
+│   └── assets/                 # Modelos 3D subidos (.obj, .fbx, .glb)
+├── server.js                   # API server (Express)
 ├── tailwind.config.js          # Configuración de Tailwind
 ├── postcss.config.js           # Configuración de PostCSS
 └── package.json
@@ -50,16 +54,52 @@ proyect-react/
 ```bash
 cd proyect-react
 npm install
-npm start
 ```
+
+### Iniciar el proyecto
+
+Se necesitan **dos procesos** corriendo simultáneamente: el cliente React y el servidor API.
+
+```bash
+# Terminal 1 — Cliente React (puerto 3000)
+npm start
+
+# Terminal 2 — API Server (puerto 3001)
+npm run server
+```
+
+## 🖥️ API Server
+
+El servidor Express (`server.js`) corre en `http://localhost:3001` y gestiona los modelos 3D almacenados en `public/assets/`.
+
+### Endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/models` | Lista todos los modelos disponibles (.obj, .fbx, .glb) |
+| `POST` | `/api/models/upload` | Sube un modelo 3D (campo `model`, máx 500 MB) |
+| `PATCH` | `/api/models/:fileName` | Renombra un modelo (body: `{ "title": "..." }`) |
+| `DELETE` | `/api/models/:fileName` | Elimina un modelo |
+
+### Archivos estáticos
+
+Los modelos subidos se sirven desde `/assets/` y sus metadatos (títulos personalizados) se guardan en `public/assets/models-meta.json`.
+
+### Dependencias del servidor
+
+- Express 5
+- Multer (upload de archivos)
+- CORS
 
 ## 📦 Dependencias
 
 - React 19.2.4
 - React Router DOM 7.13.2
-- Tailwind CSS 4.2.2
-- PostCSS 8.5.8
-- Autoprefixer 10.4.27
+- React Three Fiber + Drei (visualización 3D)
+- Three.js 0.183
+- Tailwind CSS 3.4
+- PostCSS 8.5
+- Autoprefixer 10.4
 
 ## 🔗 Rutas Disponibles
 
@@ -100,8 +140,11 @@ npm start
 ## 🛠️ Desarrollo
 
 ```bash
-# Iniciar servidor de desarrollo
+# Iniciar cliente React (puerto 3000)
 npm start
+
+# Iniciar API server (puerto 3001)
+npm run server
 
 # Build para producción
 npm run build

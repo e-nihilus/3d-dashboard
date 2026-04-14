@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
 
 export default function LandingPage() {
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const [, setUploadedFile] = useState(null);
   const fileInputRef = useRef(null);
   const dragAreaRef = useRef(null);
   const navigate = useNavigate();

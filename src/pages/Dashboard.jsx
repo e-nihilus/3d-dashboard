@@ -9,7 +9,6 @@ export default function Dashboard() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const fileInputRef = useRef(null);
-  const nextIdRef = useRef(3);
   const dragAreaRef = useRef(null);
   const API_URL = 'http://localhost:3001/api';
 
