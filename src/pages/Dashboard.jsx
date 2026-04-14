@@ -217,7 +217,7 @@ export default function Dashboard() {
             {/* Grid of Models */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredModels.map((model) => (
-                <div key={model.id} className="glass-card rounded-lg p-4 group cursor-pointer hover:translate-y-[-4px] transition-all duration-300">
+                <div key={model.id} className={`glass-card rounded-lg p-4 group cursor-pointer hover:translate-y-[-4px] transition-all duration-300 relative ${openMenuId === model.id ? 'z-50' : ''}`}>
                   <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
                     {model.modelPath ? (
                       <>

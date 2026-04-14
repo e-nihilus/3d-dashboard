@@ -1,5 +1,7 @@
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
+import ModelPreview from '../components/ModelPreview';
 
 const assetImages = [
   { label: 'Front View', src: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCpJOG3GSOjsKlanJhCI-hJ5PD9QVY6l5LEjxlXgy6F5qm9aQyP_HfKwrN4P6hcYjsKiIWsZZBzSCY3_mhcbR4eQy7YKx_dRoL3hehNqp99DnBkXIt5nKyN9Zze5bi3g6QmUjEuqhh5IdhThTKbNiXzCR1WyIDfvTqsjXWqg5N5z20XrgMCZmSpQxAo-8ufqeAIId8I9x8eeGqiOIea1KLqJgpDul8Vzb0Bj5xD6EOWIAKjpkHZeW-emSXHEA0OToObbEum9ZozX_A' },
@@ -11,6 +13,9 @@ const assetImages = [
 ];
 
 export default function EditorHierarchy() {
+  const [searchParams] = useSearchParams();
+  const modelPath = searchParams.get('model') || '';
+
   return (
     <AppLayout>
       <main className="flex-1 p-4 lg:p-8 flex flex-col gap-8">
@@ -69,12 +74,18 @@ export default function EditorHierarchy() {
 
             {/* Central 3D Viewer */}
             <div className="col-span-12 lg:col-span-9 flex flex-col gap-8">
-              <div className="relative group aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-surface-container-high to-surface-container shadow-2xl">
-                <img
-                  alt="3D Shoe Model"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDL87OzO1CgbPP4hEahvuaTVoa4iCHO1Y5o-Y7uqPX1gMk6zaJPTO7oOW9H4QlvlQAgmr-YmopUE2r_u7l7i8EgJrxk327xPuUOHyRMSfULcBAfayGRz2X8aBAp9TTAUnUlr4fG_MZu1h_7klneh-rlLvPQXbkAXgz-ebaWOV4nqpWHLQ754BNj0yq_o3X8oh_LArwDanVrq4APDvgQ2YnvTCXuOHK95geQBHuVfhKtHZewxXEwYHtSY1SNm0L0v5oD4DH1hL8LTJI"
-                />
+              <div className="relative group aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl">
+                {modelPath ? (
+                  <ModelPreview modelPath={modelPath} enableZoom enablePan />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white/60">
+                      <span className="material-symbols-outlined text-6xl mb-4 block">view_in_ar</span>
+                      <p className="font-headline font-bold text-lg">No model loaded</p>
+                      <p className="text-sm mt-1">Select a model from the dashboard.</p>
+                    </div>
+                  </div>
+                )}
                 {/* Viewport HUD Overlay */}
                 <div className="absolute inset-0 p-6 pointer-events-none flex flex-col justify-between">
                   <div className="flex justify-between items-start pointer-events-auto">

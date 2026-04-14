@@ -16,11 +16,11 @@ const tabs = [
 ];
 
 const editorSubmenu = [
-  { label: 'Hierarchy', icon: 'account_tree' },
-  { label: 'Materials', icon: 'palette' },
-  { label: 'Lighting', icon: 'lightbulb' },
-  { label: 'Camera', icon: 'videocam' },
-  { label: 'Render', icon: 'image' }
+  { label: 'Hierarchy', icon: 'account_tree', to: '/editor/hierarchy' },
+  { label: 'Materials', icon: 'palette', to: '/editor/materials' },
+  { label: 'Lighting', icon: 'lightbulb', to: '/editor/lighting' },
+  { label: 'Camera', icon: 'videocam', to: '/editor/camera' },
+  { label: 'Render', icon: 'image', to: '/editor/render' }
 ];
 
 const mobileNavItems = [
@@ -33,6 +33,7 @@ const mobileNavItems = [
 export default function AppLayout({ children }) {
   const location = useLocation();
   const isEditorActive = location.pathname === '/editor' || location.pathname.startsWith('/editor/');
+  const editorQuery = isEditorActive ? location.search : '';
 
   return (
     <div className="bg-surface font-body text-on-surface min-h-screen flex">
@@ -53,7 +54,7 @@ export default function AppLayout({ children }) {
             return (
               <React.Fragment key={idx}>
                 <Link
-                  to={item.to}
+                  to={item.to + editorQuery}
                   title={item.tooltip}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                     active
@@ -70,26 +71,35 @@ export default function AppLayout({ children }) {
                     isEditorActive ? 'max-h-96 opacity-100 py-1' : 'max-h-0 opacity-0'
                   }`}
                 >
-                  {editorSubmenu.map((submenuItem, subIdx) => (
-                    <button
-                      key={subIdx}
-                      title={submenuItem.label}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        {submenuItem.icon}
-                      </span>
-                    </button>
-                  ))}
+                  {editorSubmenu.map((submenuItem, subIdx) => {
+                    const subActive = location.pathname === submenuItem.to;
+                    return (
+                      <Link
+                        key={subIdx}
+                        to={submenuItem.to + editorQuery}
+                        title={submenuItem.label}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                          subActive
+                            ? 'bg-primary/15 text-primary'
+                            : 'text-slate-400 hover:bg-primary/10 hover:text-primary'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-lg">
+                          {submenuItem.icon}
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </React.Fragment>
             );
           }
 
+          const linkTo = item.to.startsWith('/editor') ? item.to + editorQuery : item.to;
           return (
             <Link
               key={idx}
-              to={item.to}
+              to={linkTo}
               title={item.tooltip}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                 active
@@ -137,7 +147,7 @@ export default function AppLayout({ children }) {
                    return (
                      <Link
                        key={tab.to}
-                       to={tab.to}
+                       to={tab.to + editorQuery}
                        className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                          active
                            ? 'bg-white text-primary shadow-sm'
@@ -199,8 +209,9 @@ export default function AppLayout({ children }) {
             );
 
             if (item.to) {
+              const mobileLink = item.to.startsWith('/editor') ? item.to + editorQuery : item.to;
               return (
-                <Link key={item.label} to={item.to}>
+                <Link key={item.label} to={mobileLink}>
                   {content}
                 </Link>
               );

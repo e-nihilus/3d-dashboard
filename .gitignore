@@ -5,7 +5,6 @@
 /.pnp
 .pnp.js
 /public/assets
-proyect-react\public\assets
 
 # testing
 /coverage

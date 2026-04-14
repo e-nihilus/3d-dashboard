@@ -4,6 +4,9 @@ import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import Editor from './pages/Editor';
 import EditorHierarchy from './pages/EditorHierarchy';
+import EditorMaterials from './pages/EditorMaterials';
+import EditorLighting from './pages/EditorLighting';
+import EditorCamera from './pages/EditorCamera';
 import EditorRender from './pages/EditorRender';
 import ExportPanel from './pages/ExportPanel';
 import UploadProcessing from './pages/UploadProcessing';
@@ -18,6 +21,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/editor" element={<Editor />} />
         <Route path="/editor/hierarchy" element={<EditorHierarchy />} />
+        <Route path="/editor/materials" element={<EditorMaterials />} />
+        <Route path="/editor/lighting" element={<EditorLighting />} />
+        <Route path="/editor/camera" element={<EditorCamera />} />
         <Route path="/editor/render" element={<EditorRender />} />
         <Route path="/export" element={<ExportPanel />} />
         <Route path="/upload" element={<UploadProcessing />} />

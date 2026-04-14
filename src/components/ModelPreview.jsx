@@ -39,7 +39,7 @@ function AutoFitModel({ path }) {
     ref.current.position.sub(center);
 
     const maxDim = Math.max(size.x, size.y, size.z);
-    const distance = maxDim * 2.5;
+    const distance = maxDim * 1.6;
     camera.position.set(distance * 0.7, distance * 0.4, distance * 0.8);
     camera.near = maxDim * 0.01;
     camera.far = maxDim * 100;
