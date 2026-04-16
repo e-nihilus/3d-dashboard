@@ -8,9 +8,11 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleteType, setDeleteType] = useState('model');
+  const [scenes, setScenes] = useState([]);
   const fileInputRef = useRef(null);
   const dragAreaRef = useRef(null);
-  const API_URL = 'http://localhost:3001/api';
+  const API_URL = 'http://localhost:5174/api';
 
   const formatDate = (isoString) => {
     const diff = Date.now() - new Date(isoString).getTime();
@@ -43,7 +45,7 @@ export default function Dashboard() {
       const res = await fetch(`${API_URL}/models/upload`, { method: 'POST', body: formData });
       const newModel = await res.json();
       if (res.ok) {
-        newModel.modelPath = `http://localhost:3001${newModel.modelPath}`;
+        newModel.modelPath = `http://localhost:5174${newModel.modelPath}`;
         setModels((prev) => [...prev, newModel]);
       } else {
         alert(newModel.error || 'Upload failed');
@@ -92,11 +94,16 @@ export default function Dashboard() {
       .then((data) => {
         const withFullPath = data.map((m) => ({
           ...m,
-          modelPath: `http://localhost:3001${m.modelPath}`,
+          modelPath: `http://localhost:5174${m.modelPath}`,
         }));
         setModels(withFullPath);
       })
       .catch(() => console.error('Could not fetch models from API'));
+
+    fetch(`${API_URL}/scenes`)
+      .then((res) => res.json())
+      .then((data) => setScenes(data))
+      .catch(() => console.error('Could not fetch scenes from API'));
   }, []);
 
   useEffect(() => {
@@ -105,27 +112,42 @@ export default function Dashboard() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const handleDelete = (id) => {
+  const handleDelete = (id, type = 'model') => {
     setOpenMenuId(null);
     setDeleteConfirm(id);
+    setDeleteType(type);
   };
 
   const confirmDelete = async () => {
-    const model = models.find((m) => m.id === deleteConfirm);
-    if (model?.fileName) {
+    if (deleteType === 'scene') {
       try {
-        await fetch(`${API_URL}/models/${encodeURIComponent(model.fileName)}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/scenes/${deleteConfirm}`, { method: 'DELETE' });
       } catch {
         alert('Could not connect to server.');
       }
+      setScenes((prev) => prev.filter((s) => s.id !== deleteConfirm));
+    } else {
+      const model = models.find((m) => m.id === deleteConfirm);
+      if (model?.fileName) {
+        try {
+          await fetch(`${API_URL}/models/${encodeURIComponent(model.fileName)}`, { method: 'DELETE' });
+        } catch {
+          alert('Could not connect to server.');
+        }
+      }
+      setModels((prev) => prev.filter((m) => m.id !== deleteConfirm));
     }
-    setModels((prev) => prev.filter((m) => m.id !== deleteConfirm));
     setDeleteConfirm(null);
   };
 
   const handleEdit = (model) => {
     setOpenMenuId(null);
     navigate(`/editor?model=${encodeURIComponent(model.modelPath)}&title=${encodeURIComponent(model.title)}`);
+  };
+
+  const handleEditScene = (scene) => {
+    setOpenMenuId(null);
+    navigate(`/editor?model=${encodeURIComponent(scene.modelPath)}&title=${encodeURIComponent(scene.title)}&sceneId=${encodeURIComponent(scene.id)}`);
   };
 
   const handleDownload = (model) => {
@@ -142,6 +164,10 @@ export default function Dashboard() {
     model.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const filteredScenes = scenes.filter((scene) =>
+    scene.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <AppLayout>
       <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
@@ -149,9 +175,9 @@ export default function Dashboard() {
             {/* Header with search + upload */}
             <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <h1 className="font-headline text-2xl md:text-4xl font-extrabold text-on-surface tracking-tighter mb-1">Your Models</h1>
+                <h1 className="font-headline text-2xl md:text-4xl font-extrabold text-on-surface tracking-tighter mb-1">Your Projects</h1>
                 <p className="text-on-surface-variant font-medium text-sm leading-relaxed">
-                  Manage your architectural creations in high fidelity.
+                  Manage your assets and scenes in high fidelity.
                 </p>
               </div>
 
@@ -213,103 +239,211 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Grid of Models */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredModels.map((model) => (
-                <div key={model.id} className={`glass-card rounded-lg p-4 group cursor-pointer hover:translate-y-[-4px] transition-all duration-300 relative ${openMenuId === model.id ? 'z-50' : ''}`}>
-                  <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-                    {model.modelPath ? (
-                      <>
-                        <ModelPreview modelPath={model.modelPath} />
-                        <div className="absolute top-3 right-3 bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 z-10">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> {model.status}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Loading Model</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="px-2">
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-headline font-bold text-lg">{model.title}</h3>
-                      <div className="relative">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === model.id ? null : model.id); }}
-                          className="p-1 rounded-full hover:bg-surface-container-high transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-on-surface-variant text-sm">more_vert</span>
-                        </button>
-                        {openMenuId === model.id && (
-                            <div className="absolute right-0 top-8 z-30 w-44 bg-white rounded-xl shadow-xl border border-slate-200/80 p-1.5 animate-[fadeIn_0.15s_ease-out]">
-                              <button
-                                onClick={() => handleEdit(model)}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">edit</span>
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDownload(model)}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">download</span>
-                                Download
-                              </button>
-                              <div className="my-1 border-t border-slate-100"></div>
-                              <button
-                                onClick={() => handleDelete(model.id)}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">delete</span>
-                                Delete
-                              </button>
+            {/* Scenes Section */}
+            {filteredScenes.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary text-2xl">movie_creation</span>
+                  <h2 className="font-headline text-xl font-extrabold text-on-surface">Scenes</h2>
+                  <span className="text-[11px] font-bold text-on-surface-variant bg-surface-container-high px-2.5 py-0.5 rounded-full">
+                    {filteredScenes.length}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredScenes.map((scene) => (
+                    <div key={scene.id} className={`glass-card rounded-lg p-4 group cursor-pointer hover:translate-y-[-4px] transition-all duration-300 relative ${openMenuId === scene.id ? 'z-50' : ''}`}>
+                      <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                        {scene.thumbnailUrl ? (
+                          <>
+                            <img
+                              src={`http://localhost:5174${scene.thumbnailUrl}`}
+                              alt={scene.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-3 right-3 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 z-10">
+                              <span className="material-symbols-outlined text-[12px]">movie_creation</span> Scene
                             </div>
+                          </>
+                        ) : scene.modelPath ? (
+                          <>
+                            <ModelPreview modelPath={scene.modelPath} />
+                            <div className="absolute top-3 right-3 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 z-10">
+                              <span className="material-symbols-outlined text-[12px]">movie_creation</span> Scene
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center gap-3">
+                            <span className="material-symbols-outlined text-4xl text-white/30">movie_creation</span>
+                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">No preview</span>
+                          </div>
                         )}
                       </div>
+
+                      <div className="px-2">
+                        <div className="flex justify-between items-start mb-1">
+                          <h3 className="font-headline font-bold text-lg">{scene.title}</h3>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === scene.id ? null : scene.id); }}
+                              className="p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                            >
+                              <span className="material-symbols-outlined text-on-surface-variant text-sm">more_vert</span>
+                            </button>
+                            {openMenuId === scene.id && (
+                              <div className="absolute right-0 top-8 z-30 w-44 bg-white rounded-xl shadow-xl border border-slate-200/80 p-1.5 animate-[fadeIn_0.15s_ease-out]">
+                                <button
+                                  onClick={() => handleEditScene(scene)}
+                                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                                  Edit
+                                </button>
+                                <div className="my-1 border-t border-slate-100"></div>
+                                <button
+                                  onClick={() => handleDelete(scene.id, 'scene')}
+                                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-on-surface-variant font-medium mb-4 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[14px]">update</span>
+                          {formatDate(scene.updatedAt)}
+                        </p>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] bg-amber-100 px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-amber-700">
+                            Scene
+                          </span>
+                          {scene.hdri && (
+                            <span className="text-[10px] bg-blue-100 px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-blue-700">
+                              HDRI
+                            </span>
+                          )}
+                          {scene.importedModels?.length > 0 && (
+                            <span className="text-[10px] bg-purple-100 px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-purple-700">
+                              {scene.importedModels.length} object{scene.importedModels.length > 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Assets Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-2xl">view_in_ar</span>
+                <h2 className="font-headline text-xl font-extrabold text-on-surface">Assets</h2>
+                <span className="text-[11px] font-bold text-on-surface-variant bg-surface-container-high px-2.5 py-0.5 rounded-full">
+                  {filteredModels.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredModels.map((model) => (
+                  <div key={model.id} className={`glass-card rounded-lg p-4 group cursor-pointer hover:translate-y-[-4px] transition-all duration-300 relative ${openMenuId === model.id ? 'z-50' : ''}`}>
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                      {model.modelPath ? (
+                        <>
+                          <ModelPreview modelPath={model.modelPath} />
+                          <div className="absolute top-3 right-3 bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 z-10">
+                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> {model.status}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                          <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Loading Model</span>
+                        </div>
+                      )}
                     </div>
 
-                    <p className="text-xs text-on-surface-variant font-medium mb-4 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[14px]">update</span>
-                      {formatDate(model.edited)}
-                    </p>
+                    <div className="px-2">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="font-headline font-bold text-lg">{model.title}</h3>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === model.id ? null : model.id); }}
+                            className="p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-on-surface-variant text-sm">more_vert</span>
+                          </button>
+                          {openMenuId === model.id && (
+                              <div className="absolute right-0 top-8 z-30 w-44 bg-white rounded-xl shadow-xl border border-slate-200/80 p-1.5 animate-[fadeIn_0.15s_ease-out]">
+                                <button
+                                  onClick={() => handleEdit(model)}
+                                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDownload(model)}
+                                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">download</span>
+                                  Download
+                                </button>
+                                <div className="my-1 border-t border-slate-100"></div>
+                                <button
+                                  onClick={() => handleDelete(model.id)}
+                                  className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                                  Delete
+                                </button>
+                              </div>
+                          )}
+                        </div>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      {model.tags.map((tag, idx) => (
-                        <span key={idx} className="text-[10px] bg-surface-container-high px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-on-surface-variant">
-                          {tag}
-                        </span>
-                      ))}
+                      <p className="text-xs text-on-surface-variant font-medium mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[14px]">update</span>
+                        {formatDate(model.edited)}
+                      </p>
+
+                      <div className="flex items-center gap-2">
+                        {model.tags.map((tag, idx) => (
+                          <span key={idx} className="text-[10px] bg-surface-container-high px-2 py-1 rounded-full font-semibold uppercase tracking-tighter text-on-surface-variant">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {/* Upload Placeholder */}
-              <div
-                ref={dragAreaRef}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className="rounded-lg p-8 border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center text-center gap-4 group cursor-pointer hover:bg-primary/10 transition-all"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".obj,.fbx,.glb"
-                  onChange={handleInputChange}
-                  className="hidden"
-                />
-                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg shadow-primary/5 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
-                </div>
-                <div>
-                  <h4 className="font-headline font-bold text-lg">Drag & Drop</h4>
-                  <p className="text-xs text-on-surface-variant mt-1">OBJ, FBX, or GLB files up to 500MB</p>
+                {/* Upload Placeholder */}
+                <div
+                  ref={dragAreaRef}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className="rounded-lg p-8 border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center text-center gap-4 group cursor-pointer hover:bg-primary/10 transition-all"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".obj,.fbx,.glb"
+                    onChange={handleInputChange}
+                    className="hidden"
+                  />
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg shadow-primary/5 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
+                  </div>
+                  <div>
+                    <h4 className="font-headline font-bold text-lg">Drag & Drop</h4>
+                    <p className="text-xs text-on-surface-variant mt-1">OBJ, FBX, or GLB files up to 500MB</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -332,10 +466,10 @@ export default function Dashboard() {
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                 <span className="material-symbols-outlined text-red-600">delete</span>
               </div>
-              <h3 className="font-headline font-bold text-lg text-on-surface">Delete Model</h3>
+              <h3 className="font-headline font-bold text-lg text-on-surface">Delete {deleteType === 'scene' ? 'Scene' : 'Model'}</h3>
             </div>
             <p className="text-sm text-on-surface-variant mb-6">
-              Are you sure you want to delete this model? This action cannot be undone.
+              Are you sure you want to delete this {deleteType === 'scene' ? 'scene' : 'model'}? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button

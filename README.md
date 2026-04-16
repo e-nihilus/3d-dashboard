@@ -1,11 +1,11 @@
 # Aurea 3D - React Project
 
-Migración completa del diseño HTML a React con Tailwind CSS.
+Migración completa del diseño HTML a React con Tailwind CSS. Bundler: **Vite**.
 
 ## 📋 Estructura del Proyecto
 
 ```
-proyect-react/
+landing-3d/
 ├── src/
 │   ├── components/
 │   │   ├── Navbar.jsx          # Barra de navegación reutilizable
@@ -22,10 +22,12 @@ proyect-react/
 │   │   └── AdvancedOutputs.jsx
 │   ├── App.js                  # Enrutamiento principal
 │   ├── index.css               # Estilos globales
-│   └── index.js                # Punto de entrada
+│   └── index.jsx               # Punto de entrada
 ├── public/
 │   └── assets/                 # Modelos 3D subidos (.obj, .fbx, .glb)
-├── server.js                   # API server (Express)
+├── index.html                  # HTML raíz (Vite)
+├── vite.config.js              # Configuración de Vite
+├── server.js                   # API server (Express, puerto 5174)
 ├── tailwind.config.js          # Configuración de Tailwind
 ├── postcss.config.js           # Configuración de PostCSS
 └── package.json
@@ -52,25 +54,36 @@ proyect-react/
 ## 🚀 Instalación
 
 ```bash
-cd proyect-react
+cd landing-3d
 npm install
 ```
 
 ### Iniciar el proyecto
 
-Se necesitan **dos procesos** corriendo simultáneamente: el cliente React y el servidor API.
+Un solo comando levanta **cliente Vite + API server** simultáneamente:
 
 ```bash
-# Terminal 1 — Cliente React (puerto 3000)
-npm start
+npm run dev
+```
 
-# Terminal 2 — API Server (puerto 3001)
+| Servicio | Puerto | URL |
+|----------|--------|-----|
+| Cliente (Vite) | 5173 | http://localhost:5173 |
+| API Server (Express) | 5174 | http://localhost:5174 |
+
+También se pueden iniciar por separado:
+
+```bash
+# Solo el cliente Vite
+npm run client
+
+# Solo el API server
 npm run server
 ```
 
 ## 🖥️ API Server
 
-El servidor Express (`server.js`) corre en `http://localhost:3001` y gestiona los modelos 3D almacenados en `public/assets/`.
+El servidor Express (`server.js`) corre en `http://localhost:5174` y gestiona los modelos 3D almacenados en `public/assets/`.
 
 ### Endpoints
 
@@ -93,13 +106,14 @@ Los modelos subidos se sirven desde `/assets/` y sus metadatos (títulos persona
 
 ## 📦 Dependencias
 
-- React 19.2.4
-- React Router DOM 7.13.2
+- React 19
+- React Router DOM 7
 - React Three Fiber + Drei (visualización 3D)
-- Three.js 0.183
-- Tailwind CSS 3.4
-- PostCSS 8.5
-- Autoprefixer 10.4
+- Three.js
+- Vite 8
+- Tailwind CSS 3
+- PostCSS + Autoprefixer
+- Concurrently (dev)
 
 ## 🔗 Rutas Disponibles
 
@@ -125,32 +139,20 @@ Los modelos subidos se sirven desde `/assets/` y sus metadatos (títulos persona
 ✅ Diseño responsive
 ✅ Estilos Tailwind CSS
 ✅ Enrutamiento con React Router
-
-## 📝 Próximos Pasos
-
-- [ ] Integrar componentes 3D (Three.js o Babylon.js)
-- [ ] Implementar lógica de autenticación
-- [ ] Conectar APIs backend
-- [ ] Agregar formularios funcionales
-- [ ] Implementar upload de archivos
-- [ ] Agregar temas dark/light
-- [ ] Optimizar imágenes
-- [ ] Testing unitario
+✅ Migración de CRA a Vite
+✅ Inicio completo con un solo comando (`npm run dev`)
 
 ## 🛠️ Desarrollo
 
 ```bash
-# Iniciar cliente React (puerto 3000)
-npm start
-
-# Iniciar API server (puerto 3001)
-npm run server
+# Iniciar todo (cliente + API)
+npm run dev
 
 # Build para producción
 npm run build
 
-# Tests
-npm test
+# Preview del build
+npm run preview
 ```
 
 ## 📄 Licencia
