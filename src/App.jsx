@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import Editor from './pages/Editor';
+import ViewerPage from './viewer/pages/ViewerPage';
 import EditorHierarchy from './pages/EditorHierarchy';
 import EditorMaterials from './pages/EditorMaterials';
 import EditorLighting from './pages/EditorLighting';
@@ -19,7 +20,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/editor" element={<Editor />} />
+        <Route path="/editor" element={<ViewerPage />} />
         <Route path="/editor/hierarchy" element={<EditorHierarchy />} />
         <Route path="/editor/materials" element={<EditorMaterials />} />
         <Route path="/editor/lighting" element={<EditorLighting />} />

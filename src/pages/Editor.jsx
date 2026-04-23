@@ -300,7 +300,7 @@ export default function Editor() {
   }, [title, modelPath, activeHdriInfo, importedModels, sceneId]);
 
   return (
-    <AppLayout>
+    <AppLayout collapsibleSidebar>
       <main className="flex-1 flex flex-col p-4 gap-4 max-w-[1920px] mx-auto w-full h-[calc(100vh-120px)] overflow-hidden">
         {/* Viewport Header */}
         <header className="flex justify-between items-center px-4">

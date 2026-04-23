@@ -1,0 +1,17 @@
+:root {
+  --radius-pill: 9999px;
+  --radius-xl: 1.25rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --font-display: 'Manrope', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --color-primary: #006a67;
+  --color-primary-container: #30ada9;
+  --shadow-sunlight: 0 1px 3px rgba(0, 0, 0, 0.06), 0 6px 16px rgba(0, 0, 0, 0.04);
+}
