@@ -15,14 +15,6 @@ const tabs = [
   { label: 'Editor', icon: 'edit', to: '/editor' },
 ];
 
-const editorSubmenu = [
-  { label: 'Hierarchy', icon: 'account_tree', to: '/editor/hierarchy' },
-  { label: 'Materials', icon: 'palette', to: '/editor/materials' },
-  { label: 'Lighting', icon: 'lightbulb', to: '/editor/lighting' },
-  { label: 'Camera', icon: 'videocam', to: '/editor/camera' },
-  { label: 'Render', icon: 'image', to: '/editor/render' }
-];
-
 const mobileNavItems = [
   { label: 'Studio', icon: 'polyline', to: '/' },
   { label: 'Assets', icon: 'view_in_ar', to: '/dashboard' },
@@ -70,53 +62,6 @@ export default function AppLayout({ children, collapsibleSidebar = false }) {
 
         {sidebarIcons.slice(1).map((item, idx) => {
           const active = location.pathname === item.to || location.pathname.startsWith(item.to + '/');
-          const isEditorIcon = item.tooltip === 'Editor';
-
-          if (isEditorIcon) {
-            return (
-              <React.Fragment key={idx}>
-                <Link
-                  to={item.to + editorQuery}
-                  title={item.tooltip}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                    active
-                      ? 'bg-primary/15 text-primary'
-                      : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-xl">{item.icon}</span>
-                </Link>
-
-                {/* Editor Submenu - Inline dentro de la sidebar */}
-                <div
-                  className={`flex flex-col items-center gap-1 overflow-hidden transition-all duration-300 ease-in-out ml-3 ${
-                    isEditorActive ? 'max-h-96 opacity-100 py-1' : 'max-h-0 opacity-0'
-                  }`}
-                >
-                  {editorSubmenu.map((submenuItem, subIdx) => {
-                    const subActive = location.pathname === submenuItem.to;
-                    return (
-                      <Link
-                        key={subIdx}
-                        to={submenuItem.to + editorQuery}
-                        title={submenuItem.label}
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                          subActive
-                            ? 'bg-primary/15 text-primary'
-                            : 'text-slate-400 hover:bg-primary/10 hover:text-primary'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-lg">
-                          {submenuItem.icon}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </React.Fragment>
-            );
-          }
-
           const linkTo = item.to.startsWith('/editor') ? item.to + editorQuery : item.to;
           return (
             <Link

@@ -37,6 +37,7 @@ import AppLayout from '../../components/AppLayout'
 import ViewerScenePanel from '../components/ViewerScenePanel'
 import RotateCameraAnimation from '../components/RotateCameraAnimation'
 import ViewerHelpTutorialModal from '../components/ViewerHelpTutorialModal'
+import ViewerLightComposerPanel from '../components/ViewerLightComposerPanel'
 import ViewerProjectMenu from '../components/ViewerProjectMenu'
 import ViewerQuickCreateDock from '../components/ViewerQuickCreateDock'
 import ViewerStageControls from '../components/ViewerStageControls'
@@ -1159,6 +1160,12 @@ export default function ViewerPage() {
         view.renderer.render(view.scene, view.camera)
         screenshot = view.renderer.domElement.toDataURL('image/png')
       }
+      let savedLight = null
+      if (activeLightSelection.kind === 'custom' && activeCustomLightPreset) {
+        savedLight = { kind: 'custom', preset: activeCustomLightPreset }
+      } else if (activeLightSelection.kind === 'stock') {
+        savedLight = { kind: 'stock', lightId: activeLightSelection.lightId }
+      }
       const payload = {
         title: projectTitleOverride ?? resolvedAsset?.title ?? 'Untitled Scene',
         modelPath: externalModelUrl,
@@ -1166,6 +1173,7 @@ export default function ViewerPage() {
         transforms,
         screenshot,
         importedModels: importedModels.map((m) => ({ id: m.id, uid: m.uid, name: m.name, author: m.author, thumbnailUrl: m.thumbnailUrl, source: m.source })),
+        customLight: savedLight,
       }
       const url = sceneId ? `http://localhost:5174/api/scenes/${sceneId}` : 'http://localhost:5174/api/scenes'
       const method = sceneId ? 'PUT' : 'POST'
@@ -1178,7 +1186,7 @@ export default function ViewerPage() {
       }
     } catch { /* save failed */ }
     setSavingScene(false)
-  }, [activeHdriInfo, externalModelUrl, getObjectTransforms, handleDeselectObject, importedModels, projectTitleOverride, resolvedAsset?.title, sceneId])
+  }, [activeCustomLightPreset, activeHdriInfo, activeLightSelection, externalModelUrl, getObjectTransforms, handleDeselectObject, importedModels, projectTitleOverride, resolvedAsset?.title, sceneId])
 
   const toggleEditMode = useCallback(() => {
     if (isLightComposerOpen || isShareViewOnly) return
@@ -1254,11 +1262,21 @@ export default function ViewerPage() {
           }
         }
       }
+      if (sceneData.customLight) {
+        try {
+          if (sceneData.customLight.kind === 'custom' && sceneData.customLight.preset) {
+            await applyCustomLightPreset(sceneData.customLight.preset)
+          } else if (sceneData.customLight.kind === 'stock' && sceneData.customLight.lightId) {
+            const lightAsset = baseLightAssets.find((l) => l.id === sceneData.customLight.lightId)
+            if (lightAsset) await applyBaseLight(lightAsset)
+          }
+        } catch { /* light restore failed */ }
+      }
       if (sceneData.title) setProjectTitleOverride(sceneData.title)
       setSceneRestored(true)
     }, 1500)
     return () => clearTimeout(timer)
-  }, [sceneData, sceneRestored, isAssetLoading, handleApplyHdri, handleImportModel])
+  }, [sceneData, sceneRestored, isAssetLoading, handleApplyHdri, handleImportModel, applyCustomLightPreset, applyBaseLight, baseLightAssets])
 
   useEffect(() => {
     if (!isEditMode) return
@@ -1510,6 +1528,22 @@ export default function ViewerPage() {
                     saveSuccess={saveSuccess}
                     onSaveScene={handleSaveScene}
                     sceneId={sceneId}
+                  />
+                ) : null}
+
+                {isLightComposerOpen && lightComposerDraft ? (
+                  <ViewerLightComposerPanel
+                    draft={lightComposerDraft}
+                    isApplyingLight={lightApplyStatus === 'loading'}
+                    onDraftChange={(nextDraft) => setLightComposerDraft(nextDraft)}
+                    onAddSource={addComposerSource}
+                    onSelectSource={selectComposerSource}
+                    onReorderSources={reorderComposerSources}
+                    onSourceChange={updateComposerSource}
+                    onDeleteSource={removeComposerSource}
+                    onSave={() => { void saveComposedLight() }}
+                    onCancel={closeLightComposerWithRevert}
+                    copy={copy}
                   />
                 ) : null}
               </>

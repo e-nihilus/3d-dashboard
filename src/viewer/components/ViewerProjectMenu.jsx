@@ -110,8 +110,8 @@ export default function ViewerProjectMenu({ isProjectMenuOpen, onToggleProjectMe
               <li className={`viewer-stage-project-menu__asset-light-item ${isLightPickerOpen ? 'is-open' : ''}`}>
                 <span className="viewer-stage-project-menu__asset-pill is-light" aria-hidden="true"><Lightbulb aria-hidden="true" size={13} /> {copy.editorMode.assetTypeLight}</span>
                 <span className="viewer-stage-project-menu__asset-light-meta"><span className="viewer-stage-project-menu__asset-name">{activeLightLabel}</span></span>
-                <button type="button" className="viewer-stage-project-menu__light-change" onClick={onOpenLightComposer} disabled={baseLightAssets.length === 0 || lightApplyStatus === 'loading'}>{copy.editorMode.createLightCta}</button>
-                <button type="button" className="viewer-stage-project-menu__light-change" onClick={() => setIsLightPickerOpen((s) => !s)} disabled={baseLightAssets.length === 0 || lightApplyStatus === 'loading'}>{copy.editorMode.changeLightCta}</button>
+                <button type="button" className="viewer-stage-project-menu__light-change" onClick={onOpenLightComposer} disabled={lightApplyStatus === 'loading'}>{copy.editorMode.createLightCta}</button>
+                <button type="button" className="viewer-stage-project-menu__light-change" onClick={() => setIsLightPickerOpen((s) => !s)} disabled={lightApplyStatus === 'loading'}>{copy.editorMode.changeLightCta}</button>
               </li>
             </ul>
           </div>
