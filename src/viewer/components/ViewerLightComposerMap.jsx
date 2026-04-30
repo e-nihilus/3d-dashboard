@@ -51,11 +51,24 @@ export default function ViewerLightComposerMap({ sources, activeSourceId, copy, 
     onSourceChange({ ...source, position: { ...source.position, x: toWorldX(percentX), z: toWorldZ(percentY) } });
   }, [onSourceChange, sourceById]);
 
+  const heightDragRef = useRef({ startClientY: 0, startLightY: 0 });
+
+  const setSourceHeightFromDelta = useCallback((sourceId, clientY) => {
+    const source = sourceById.get(sourceId);
+    if (!source) return;
+    const deltaPixels = heightDragRef.current.startClientY - clientY;
+    const sensitivity = 0.04;
+    const nextY = clampValue(heightDragRef.current.startLightY + deltaPixels * sensitivity, 0, 12);
+    onSourceChange({ ...source, position: { ...source.position, y: roundToTwo(nextY) } });
+  }, [onSourceChange, sourceById]);
+
   const beginDrag = useCallback((sourceId, pointerId, clientX, clientY) => {
     onSelectSource(sourceId);
+    const source = sourceById.get(sourceId);
+    heightDragRef.current = { startClientY: clientY, startLightY: source?.position.y ?? 2 };
     setDragState({ sourceId, pointerId });
     setSourcePositionFromClient(sourceId, clientX, clientY);
-  }, [onSelectSource, setSourcePositionFromClient]);
+  }, [onSelectSource, setSourcePositionFromClient, sourceById]);
 
   const nudgeSource = useCallback((source, deltaX, deltaZ) => {
     onSourceChange({
@@ -70,10 +83,22 @@ export default function ViewerLightComposerMap({ sources, activeSourceId, copy, 
 
   useEffect(() => {
     if (!dragState) return;
+    let wasShift = false;
     const onPointerMove = (event) => {
       if (event.pointerId !== dragState.pointerId) return;
       event.preventDefault();
-      setSourcePositionFromClient(dragState.sourceId, event.clientX, event.clientY);
+      if (event.shiftKey) {
+        if (!wasShift) {
+          // Entering height mode — snapshot cursor position and current Y
+          wasShift = true;
+          const source = sourceById.get(dragState.sourceId);
+          heightDragRef.current = { startClientY: event.clientY, startLightY: source?.position.y ?? heightDragRef.current.startLightY };
+        }
+        setSourceHeightFromDelta(dragState.sourceId, event.clientY);
+      } else {
+        wasShift = false;
+        setSourcePositionFromClient(dragState.sourceId, event.clientX, event.clientY);
+      }
     };
     const stopDrag = (event) => {
       if (event.pointerId !== dragState.pointerId) return;
@@ -87,7 +112,7 @@ export default function ViewerLightComposerMap({ sources, activeSourceId, copy, 
       window.removeEventListener('pointerup', stopDrag);
       window.removeEventListener('pointercancel', stopDrag);
     };
-  }, [dragState, setSourcePositionFromClient]);
+  }, [dragState, setSourcePositionFromClient, setSourceHeightFromDelta, sourceById]);
 
   if (sources.length === 0) {
     return (

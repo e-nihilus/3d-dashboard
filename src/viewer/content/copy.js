@@ -153,7 +153,7 @@ export const viewerCopy = {
     lightComposerViewportTitle: 'Live viewport',
     lightComposerViewportHint: 'Preview scene above while tuning source map and values.',
     lightComposerMapTitle: 'Light map',
-    lightComposerMapHint: 'Drag points to move lights on X/Z plane.',
+    lightComposerMapHint: 'Drag to move on X/Z. Shift + Drag to adjust height (Y).',
     lightComposerMapAxisX: 'X axis',
     lightComposerMapAxisZ: 'Z axis',
     lightComposerRotationLabel: 'Rotation',

@@ -33,6 +33,7 @@ import {
   clearHdri,
 } from '../utils/viewerScene'
 import SketchfabModal from '../../components/SketchfabModal'
+import LocalAssetsModal from '../../components/LocalAssetsModal'
 import AppLayout from '../../components/AppLayout'
 import ViewerScenePanel from '../components/ViewerScenePanel'
 import RotateCameraAnimation from '../components/RotateCameraAnimation'
@@ -164,6 +165,8 @@ export default function ViewerPage() {
   const initialTransformsRef = useRef(new Map())
   const selectedObjectRef = useRef(null)
   const hdriTexturesRef = useRef({ texture: null, envMap: null })
+  const undoStackRef = useRef([])
+  const redoStackRef = useRef([])
 
   const [assets, setAssets] = useState(null)
   const [manifestError, setManifestError] = useState(null)
@@ -192,6 +195,7 @@ export default function ViewerPage() {
   const [lightComposerDraft, setLightComposerDraft] = useState(null)
   const [lightSelectionBeforeComposer, setLightSelectionBeforeComposer] = useState(null)
   const [isSketchfabOpen, setIsSketchfabOpen] = useState(false)
+  const [isLocalAssetsOpen, setIsLocalAssetsOpen] = useState(false)
   const [importedModels, setImportedModels] = useState([])
   const [selectedObjectId, setSelectedObjectId] = useState(null)
   const [transformMode, setTransformMode] = useState('translate')
@@ -219,7 +223,12 @@ export default function ViewerPage() {
   const controlsShortcutKeys = useMemo(() => [shortcutModifierLabel, shortcutAltLabel, 'B'], [shortcutAltLabel, shortcutModifierLabel])
   const editModeShortcutKeys = useMemo(() => [shortcutModifierLabel, 'E'], [shortcutModifierLabel])
 
-  useEffect(() => { activeEditorViewRef.current = activeEditorView }, [activeEditorView])
+  useEffect(() => {
+    activeEditorViewRef.current = activeEditorView
+    const view = bootstrapRef.current
+    if (!view || !editorViewPresetRef.current || !isEditMode) return
+    applyEditorView(view, editorViewPresetRef.current, activeEditorView)
+  }, [activeEditorView, isEditMode])
 
   useEffect(() => {
     if (!isShareViewOnly || !searchParams.has('mode')) return
@@ -381,6 +390,32 @@ export default function ViewerPage() {
     bootstrap.scene.add(tc.getHelper())
     transformControlsRef.current = tc
 
+    let preTransformState = null
+    tc.addEventListener('dragging-changed', (event) => {
+      if (event.value) {
+        const obj = tc.object
+        if (obj) {
+          const objId = obj === activeObjectRef.current ? 'main' : (obj.userData?.importId || null)
+          preTransformState = {
+            objectId: objId,
+            position: obj.position.clone(),
+            rotation: obj.rotation.clone(),
+            scale: obj.scale.clone(),
+          }
+        }
+      } else {
+        if (preTransformState) {
+          undoStackRef.current.push({
+            type: 'transform',
+            ...preTransformState,
+          })
+          if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+          redoStackRef.current = []
+          preTransformState = null
+        }
+      }
+    })
+
     const bootstrapDistance = bootstrap.camera.position.distanceTo(bootstrap.controls.target)
     setZoomControlProgress(getZoomProgressFromDistance(bootstrap.controls, bootstrapDistance))
     setZoomPercent(100)
@@ -397,6 +432,9 @@ export default function ViewerPage() {
     let pointerMoved = false
     let isPointerDown = false
     let draggedLightSourceId = null
+    let isDraggingHeight = false
+    let dragStartY = 0
+    let dragStartLightY = 0
 
     const positionPointerIndicator = (clientX, clientY) => {
       const view = bootstrapRef.current
@@ -439,6 +477,9 @@ export default function ViewerPage() {
           pointerMoved = false
           isPointerDown = true
           draggedLightSourceId = hitSourceId
+          isDraggingHeight = false
+          dragStartY = event.clientY
+          dragStartLightY = hitSource.position.y
           setLightComposerDraft((d) => d ? { ...d, activeSourceId: hitSourceId } : d)
           dragPlane.set(new THREE.Vector3(0, 1, 0), -hitSource.position.y)
           const planeHit = new THREE.Vector3()
@@ -470,6 +511,35 @@ export default function ViewerPage() {
       if (isEditModeRef.current) return
 
       if (isLightComposerOpenRef.current && draggedLightSourceId) {
+        const wantsHeight = event.shiftKey
+        if (wantsHeight && !isDraggingHeight) {
+          // Switching to height mode — snapshot current Y and cursor position
+          isDraggingHeight = true
+          dragStartY = event.clientY
+          const draft = lightComposerDraftRef.current
+          const src = draft?.sources.find((s) => s.id === draggedLightSourceId)
+          dragStartLightY = src ? src.position.y : dragStartLightY
+        } else if (!wantsHeight && isDraggingHeight) {
+          isDraggingHeight = false
+        }
+
+        if (isDraggingHeight) {
+          const deltaPixels = dragStartY - event.clientY
+          const sensitivity = 0.02
+          const nextY = clamp(dragStartLightY + deltaPixels * sensitivity, 0, 12)
+          setLightComposerDraft((d) => {
+            if (!d) return null
+            const idx = d.sources.findIndex((s) => s.id === draggedLightSourceId)
+            if (idx < 0) return d
+            const nextSources = d.sources.map((s, i) => {
+              if (i !== idx) return s
+              return { ...s, position: { ...s.position, y: Number(nextY.toFixed(2)) } }
+            })
+            return { ...d, sources: nextSources, activeSourceId: draggedLightSourceId }
+          })
+          pointerMoved = true
+          return
+        }
         const view = bootstrapRef.current
         if (!view) return
         if (!setRayFromPointerEvent(event, view)) return
@@ -510,6 +580,7 @@ export default function ViewerPage() {
         isPointerDown = false
         pointerMoved = false
         draggedLightSourceId = null
+        isDraggingHeight = false
         return
       }
       isPointerDown = false
@@ -542,6 +613,7 @@ export default function ViewerPage() {
     const handlePointerCancel = () => {
       isPointerDown = false
       draggedLightSourceId = null
+      isDraggingHeight = false
       setIsPointerIndicatorVisible(false)
     }
 
@@ -605,6 +677,8 @@ export default function ViewerPage() {
       tc.dispose()
       transformControlsRef.current = null
       selectedObjectRef.current = null
+      undoStackRef.current = []
+      redoStackRef.current = []
       if (hdriTexturesRef.current.texture) { hdriTexturesRef.current.texture.dispose(); hdriTexturesRef.current.texture = null }
       if (hdriTexturesRef.current.envMap) { hdriTexturesRef.current.envMap.dispose(); hdriTexturesRef.current.envMap = null }
       clearViewerEnvironmentLight(bootstrap)
@@ -815,6 +889,14 @@ export default function ViewerPage() {
     await applyResolvedLight(lightAsset, DEFAULT_VIEWER_LIGHT_ADJUSTMENTS, { kind: 'stock', lightId: lightAsset.id }, lightAsset.title, lightAsset.id)
   }, [applyResolvedLight])
 
+  const restoreHdriBackground = useCallback(() => {
+    const view = bootstrapRef.current
+    const textures = hdriTexturesRef.current
+    if (!view || !textures.texture) return
+    view.scene.background = textures.texture
+    view.scene.environment = textures.envMap
+  }, [])
+
   const applyCustomLightPreset = useCallback(async (customPreset) => {
     if (customPreset.sourceStockLightId === APP_DEFAULT_LIGHT_SOURCE_ID) {
       const view = bootstrapRef.current
@@ -826,6 +908,7 @@ export default function ViewerPage() {
       view.scene.backgroundBlurriness = customPreset.bgBlur
       view.renderer.toneMappingExposure = customPreset.exposure
       lightSourceHandleRef.current = applyViewerCustomLights(view, customPreset.sources, customPreset.sources[0]?.id ?? null)
+      restoreHdriBackground()
       setActiveLightSelection({ kind: 'custom', presetId: customPreset.id })
       setLightApplyStatus('ready')
       setLightStatusMessage(`${copy.editorMode.lightAppliedStatus}: ${customPreset.name}`)
@@ -846,7 +929,8 @@ export default function ViewerPage() {
       customPreset.id,
       customPreset.sources,
     )
-  }, [applyResolvedLight, baseLightById, copy.editorMode.lightApplyError, copy.editorMode.lightAppliedStatus, upsertActiveLightAsset])
+    restoreHdriBackground()
+  }, [applyResolvedLight, baseLightById, copy.editorMode.lightApplyError, copy.editorMode.lightAppliedStatus, restoreHdriBackground, upsertActiveLightAsset])
 
   const applyLightComposerPreview = useCallback(async (draft) => {
     const view = bootstrapRef.current
@@ -868,6 +952,7 @@ export default function ViewerPage() {
       }
       if (requestId !== lightRequestIdRef.current) return
       lightSourceHandleRef.current = applyViewerCustomLights(view, draft.sources, draft.activeSourceId, { showHandles: true })
+      restoreHdriBackground()
       setLightApplyStatus('ready')
       const sourceLabel = draft.sourceStockLightId === APP_DEFAULT_LIGHT_SOURCE_ID
         ? copy.editorMode.lightComposerDefaultSourceLabel
@@ -879,7 +964,7 @@ export default function ViewerPage() {
       setLightApplyStatus('error')
       setLightStatusMessage(fallbackMessage)
     }
-  }, [baseLightById, copy.editorMode.lightApplyError, copy.editorMode.lightAppliedStatus, copy.editorMode.lightApplyingStatus, copy.editorMode.lightComposerDefaultSourceLabel, copy.editorMode.defaultLightLabel])
+  }, [baseLightById, copy.editorMode.lightApplyError, copy.editorMode.lightAppliedStatus, copy.editorMode.lightApplyingStatus, copy.editorMode.lightComposerDefaultSourceLabel, copy.editorMode.defaultLightLabel, restoreHdriBackground])
 
   const resetToDefaultLight = useCallback(() => {
     const view = bootstrapRef.current
@@ -896,10 +981,15 @@ export default function ViewerPage() {
 
   const openLightComposer = useCallback(() => {
     setLightSelectionBeforeComposer(activeLightSelection)
-    setLightComposerDraft(buildLightDraftFromSource(APP_DEFAULT_LIGHT_SOURCE_ID, copy.editorMode.customLightSourceNamePrefix))
+    const existingPreset = activeCustomLightPreset
+    if (existingPreset) {
+      setLightComposerDraft(buildLightDraftFromSource(existingPreset.sourceStockLightId, copy.editorMode.customLightSourceNamePrefix, existingPreset))
+    } else {
+      setLightComposerDraft(buildLightDraftFromSource(APP_DEFAULT_LIGHT_SOURCE_ID, copy.editorMode.customLightSourceNamePrefix))
+    }
     setIsLightComposerOpen(true)
     setIsProjectMenuOpen(false)
-  }, [activeLightSelection, copy.editorMode.customLightSourceNamePrefix])
+  }, [activeCustomLightPreset, activeLightSelection, copy.editorMode.customLightSourceNamePrefix])
 
   const closeLightComposerWithRevert = useCallback(() => {
     setIsLightComposerOpen(false)
@@ -1000,6 +1090,7 @@ export default function ViewerPage() {
     const group = importsGroupRef.current
     if (!view || !group) return
     setIsSketchfabOpen(false)
+    setIsLocalAssetsOpen(false)
     try {
       const importedAsset = { url: modelData.downloadUrl, format: modelData.format || 'glb' }
       const loadedObject = await loadViewerAsset(importedAsset)
@@ -1045,6 +1136,9 @@ export default function ViewerPage() {
         thumbnailUrl: modelData.thumbnailUrl,
         source: 'sketchfab',
       }])
+      undoStackRef.current.push({ type: 'addImport', id, object: loadedObject, meta: modelData })
+      if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+      redoStackRef.current = []
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to import model.'
       setAssetError(message)
@@ -1054,8 +1148,17 @@ export default function ViewerPage() {
   const handleRemoveImport = useCallback((id) => {
     const entry = importedObjectsRef.current.get(id)
     if (!entry) return
+    const modelInfo = importedModels.find((m) => m.id === id)
+    undoStackRef.current.push({
+      type: 'removeImport',
+      id,
+      object: entry.object,
+      meta: entry.meta,
+      modelInfo: modelInfo ? { ...modelInfo } : null,
+    })
+    if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+    redoStackRef.current = []
     importsGroupRef.current?.remove(entry.object)
-    cleanupObject3D(entry.object)
     importedObjectsRef.current.delete(id)
     initialTransformsRef.current.delete(id)
     if (selectedObjectRef.current === entry.object) {
@@ -1064,7 +1167,7 @@ export default function ViewerPage() {
       setSelectedObjectId(null)
     }
     setImportedModels((prev) => prev.filter((m) => m.id !== id))
-  }, [])
+  }, [importedModels])
 
   const handleSelectObject = useCallback((id) => {
     const tc = transformControlsRef.current
@@ -1116,10 +1219,12 @@ export default function ViewerPage() {
     const view = bootstrapRef.current
     if (!view) return
     try {
-      if (hdriTexturesRef.current.texture) { hdriTexturesRef.current.texture.dispose() }
-      if (hdriTexturesRef.current.envMap) { hdriTexturesRef.current.envMap.dispose() }
+      const prevTexture = hdriTexturesRef.current.texture
+      const prevEnvMap = hdriTexturesRef.current.envMap
       const result = await loadHdriFromUrl(view, hdriInfo.hdrUrl)
       hdriTexturesRef.current = result
+      prevTexture?.dispose()
+      prevEnvMap?.dispose()
       setActiveHdriId(hdriInfo.id)
       setActiveHdriInfo({ id: hdriInfo.id, name: hdriInfo.name, hdrUrl: hdriInfo.hdrUrl })
     } catch { /* HDRI load failed */ }
@@ -1233,6 +1338,16 @@ export default function ViewerPage() {
           if (t.scale) m.scale.fromArray(t.scale)
         }
       }
+      if (sceneData.customLight) {
+        try {
+          if (sceneData.customLight.kind === 'custom' && sceneData.customLight.preset) {
+            await applyCustomLightPreset(sceneData.customLight.preset)
+          } else if (sceneData.customLight.kind === 'stock' && sceneData.customLight.lightId) {
+            const lightAsset = baseLightAssets.find((l) => l.id === sceneData.customLight.lightId)
+            if (lightAsset) await applyBaseLight(lightAsset)
+          }
+        } catch { /* light restore failed */ }
+      }
       if (sceneData.hdri?.hdrUrl) {
         try { await handleApplyHdri(sceneData.hdri) } catch { /* ignore */ }
       }
@@ -1261,16 +1376,6 @@ export default function ViewerPage() {
             } catch { /* restore failed */ }
           }
         }
-      }
-      if (sceneData.customLight) {
-        try {
-          if (sceneData.customLight.kind === 'custom' && sceneData.customLight.preset) {
-            await applyCustomLightPreset(sceneData.customLight.preset)
-          } else if (sceneData.customLight.kind === 'stock' && sceneData.customLight.lightId) {
-            const lightAsset = baseLightAssets.find((l) => l.id === sceneData.customLight.lightId)
-            if (lightAsset) await applyBaseLight(lightAsset)
-          }
-        } catch { /* light restore failed */ }
       }
       if (sceneData.title) setProjectTitleOverride(sceneData.title)
       setSceneRestored(true)
@@ -1347,6 +1452,133 @@ export default function ViewerPage() {
     return url.toString()
   }, [])
 
+  const performUndo = useCallback(() => {
+    const entry = undoStackRef.current.pop()
+    if (!entry) return
+
+    if (entry.type === 'transform') {
+      let target = null
+      if (entry.objectId === 'main' && activeObjectRef.current) target = activeObjectRef.current
+      else {
+        const imp = importedObjectsRef.current.get(entry.objectId)
+        if (imp) target = imp.object
+      }
+      if (target) {
+        redoStackRef.current.push({
+          type: 'transform',
+          objectId: entry.objectId,
+          position: target.position.clone(),
+          rotation: target.rotation.clone(),
+          scale: target.scale.clone(),
+        })
+        target.position.copy(entry.position)
+        target.rotation.copy(entry.rotation)
+        target.scale.copy(entry.scale)
+        if (selectedObjectRef.current === target && transformControlsRef.current) {
+          transformControlsRef.current.detach()
+          transformControlsRef.current.attach(target)
+        }
+      }
+      return
+    }
+
+    if (entry.type === 'addImport') {
+      redoStackRef.current.push({ type: 'addImport', id: entry.id, object: entry.object, meta: entry.meta })
+      importsGroupRef.current?.remove(entry.object)
+      importedObjectsRef.current.delete(entry.id)
+      initialTransformsRef.current.delete(entry.id)
+      if (selectedObjectRef.current === entry.object) {
+        transformControlsRef.current?.detach()
+        selectedObjectRef.current = null
+        setSelectedObjectId(null)
+      }
+      setImportedModels((prev) => prev.filter((m) => m.id !== entry.id))
+      return
+    }
+
+    if (entry.type === 'removeImport') {
+      redoStackRef.current.push({
+        type: 'removeImport',
+        id: entry.id,
+        object: entry.object,
+        meta: entry.meta,
+        modelInfo: entry.modelInfo,
+      })
+      importsGroupRef.current?.add(entry.object)
+      importedObjectsRef.current.set(entry.id, { object: entry.object, meta: entry.meta })
+      if (entry.modelInfo) {
+        setImportedModels((prev) => [...prev, entry.modelInfo])
+      }
+      return
+    }
+  }, [])
+
+  const performRedo = useCallback(() => {
+    const entry = redoStackRef.current.pop()
+    if (!entry) return
+
+    if (entry.type === 'transform') {
+      let target = null
+      if (entry.objectId === 'main' && activeObjectRef.current) target = activeObjectRef.current
+      else {
+        const imp = importedObjectsRef.current.get(entry.objectId)
+        if (imp) target = imp.object
+      }
+      if (target) {
+        undoStackRef.current.push({
+          type: 'transform',
+          objectId: entry.objectId,
+          position: target.position.clone(),
+          rotation: target.rotation.clone(),
+          scale: target.scale.clone(),
+        })
+        target.position.copy(entry.position)
+        target.rotation.copy(entry.rotation)
+        target.scale.copy(entry.scale)
+        if (selectedObjectRef.current === target && transformControlsRef.current) {
+          transformControlsRef.current.detach()
+          transformControlsRef.current.attach(target)
+        }
+      }
+      return
+    }
+
+    if (entry.type === 'addImport') {
+      undoStackRef.current.push({ type: 'addImport', id: entry.id, object: entry.object, meta: entry.meta })
+      importsGroupRef.current?.add(entry.object)
+      importedObjectsRef.current.set(entry.id, { object: entry.object, meta: entry.meta })
+      setImportedModels((prev) => [...prev, {
+        id: entry.id,
+        uid: entry.meta.uid,
+        name: entry.meta.name,
+        author: entry.meta.author,
+        thumbnailUrl: entry.meta.thumbnailUrl,
+        source: 'sketchfab',
+      }])
+      return
+    }
+
+    if (entry.type === 'removeImport') {
+      undoStackRef.current.push({
+        type: 'removeImport',
+        id: entry.id,
+        object: entry.object,
+        meta: entry.meta,
+        modelInfo: entry.modelInfo,
+      })
+      importsGroupRef.current?.remove(entry.object)
+      importedObjectsRef.current.delete(entry.id)
+      initialTransformsRef.current.delete(entry.id)
+      if (selectedObjectRef.current === entry.object) {
+        transformControlsRef.current?.detach()
+        selectedObjectRef.current = null
+        setSelectedObjectId(null)
+      }
+      setImportedModels((prev) => prev.filter((m) => m.id !== entry.id))
+      return
+    }
+  }, [])
+
   useEffect(() => {
     const matchesModifier = (event) => isMacPlatform ? event.metaKey : event.ctrlKey
     const isTypingElement = (target) => {
@@ -1362,6 +1594,16 @@ export default function ViewerPage() {
       const hasShiftModifier = event.shiftKey
       const matchesKey = (key, code) => pressedKey === key || pressedCode === code
 
+      if (matchesKey('z', 'KeyZ') && !hasAltModifier && !hasShiftModifier) {
+        event.preventDefault()
+        performUndo()
+        return
+      }
+      if (matchesKey('y', 'KeyY') && !hasAltModifier && !hasShiftModifier) {
+        event.preventDefault()
+        performRedo()
+        return
+      }
       if (matchesKey('r', 'KeyR') && !hasAltModifier && !hasShiftModifier) {
         if (isLightComposerOpen) return
         event.preventDefault()
@@ -1388,7 +1630,7 @@ export default function ViewerPage() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => { window.removeEventListener('keydown', onKeyDown) }
-  }, [isLightComposerOpen, isMacPlatform, isShareViewOnly, toggleEditMode])
+  }, [isLightComposerOpen, isMacPlatform, isShareViewOnly, performUndo, performRedo, toggleEditMode])
 
   const editorViewOptions = useMemo(() => [
     { id: 'isometric', label: copy.editorMode.viewIsometric },
@@ -1579,6 +1821,8 @@ export default function ViewerPage() {
             onApplyHdri={handleApplyHdri}
             onResetHdri={handleResetHdri}
             onOpenSketchfab={() => setIsSketchfabOpen(true)}
+            onOpenLocalAssets={() => setIsLocalAssetsOpen(true)}
+            onOpenLightComposer={openLightComposer}
           />
         )}
       </div>
@@ -1592,6 +1836,11 @@ export default function ViewerPage() {
       <SketchfabModal
         isOpen={isSketchfabOpen}
         onClose={() => setIsSketchfabOpen(false)}
+        onImportModel={handleImportModel}
+      />
+      <LocalAssetsModal
+        isOpen={isLocalAssetsOpen}
+        onClose={() => setIsLocalAssetsOpen(false)}
         onImportModel={handleImportModel}
       />
     </main>

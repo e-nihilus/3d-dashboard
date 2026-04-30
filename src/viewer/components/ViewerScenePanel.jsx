@@ -19,6 +19,8 @@ export default function ViewerScenePanel({
   onApplyHdri,
   onResetHdri,
   onOpenSketchfab,
+  onOpenLightComposer,
+  onOpenLocalAssets,
 }) {
   return (
     <aside className="viewer-scene-panel">
@@ -150,6 +152,15 @@ export default function ViewerScenePanel({
           </div>
         ))}
 
+        {/* Add from Local Assets */}
+        <button
+          onClick={onOpenLocalAssets}
+          className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-primary/8 text-primary text-xs font-bold hover:bg-primary/15 transition-colors border border-dashed border-primary/25"
+        >
+          <span className="material-symbols-outlined text-base">inventory_2</span>
+          Add from My Assets
+        </button>
+
         {/* Add from Sketchfab */}
         <button
           onClick={onOpenSketchfab}
@@ -157,6 +168,15 @@ export default function ViewerScenePanel({
         >
           <span className="material-symbols-outlined text-base">add</span>
           Add from Sketchfab
+        </button>
+
+        {/* Create Light */}
+        <button
+          onClick={onOpenLightComposer}
+          className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-amber-500/8 text-amber-700 text-xs font-bold hover:bg-amber-500/15 transition-colors border border-dashed border-amber-500/25"
+        >
+          <span className="material-symbols-outlined text-base">lightbulb</span>
+          Create Light
         </button>
       </div>
 

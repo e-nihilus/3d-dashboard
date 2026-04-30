@@ -39,6 +39,7 @@ export default function Editor() {
   // Scene restoration state
   const [sceneData, setSceneData] = useState(null);
   const [sceneRestored, setSceneRestored] = useState(false);
+  const restoreInFlightRef = useRef(false);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -50,94 +51,112 @@ export default function Editor() {
   // Fetch scene data when loading with a sceneId
   useEffect(() => {
     if (!sceneId) return;
+    let cancelled = false;
     fetch(`http://localhost:5174/api/scenes/${sceneId}`)
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
-        if (data) setSceneData(data);
+        if (!cancelled && data) setSceneData(data);
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [sceneId]);
 
   // Restore scene (HDRI + imported models) once preview is ready
   useEffect(() => {
-    if (!sceneData || sceneRestored) return;
+    if (!sceneData || sceneRestored || restoreInFlightRef.current) return;
     const preview = previewRef.current;
     if (!preview) return;
 
+    restoreInFlightRef.current = true;
+    let cancelled = false;
+
     // Wait a bit for the main model to load in ModelPreview
     const timer = setTimeout(async () => {
-      // Restore main model transform
-      if (sceneData.transforms?.main) {
-        preview.setObjectTransform('main', sceneData.transforms.main);
-      }
+      try {
+        if (cancelled) return;
 
-      // Restore HDRI
-      if (sceneData.hdri?.hdrUrl) {
-        try {
-          await preview.setHdri(sceneData.hdri.hdrUrl);
-          setActiveHdriId(sceneData.hdri.id);
-          setActiveHdriInfo(sceneData.hdri);
-        } catch {
-          // HDRI restore failed
+        // Restore main model transform
+        if (sceneData.transforms?.main) {
+          preview.setObjectTransform('main', sceneData.transforms.main);
         }
-      }
 
-      // Restore imported models
-      if (sceneData.importedModels?.length > 0) {
-        for (const model of sceneData.importedModels) {
-          if (model.source === 'sketchfab' && model.uid) {
-            try {
-              const res = await fetch(`http://localhost:5174/api/sketchfab/models/${model.uid}/download`);
-              const data = await res.json();
-              if (!res.ok) continue;
+        // Restore HDRI
+        if (sceneData.hdri?.hdrUrl) {
+          try {
+            await preview.setHdri(sceneData.hdri.hdrUrl);
+            if (cancelled) return;
+            setActiveHdriId(sceneData.hdri.id);
+            setActiveHdriInfo(sceneData.hdri);
+          } catch {
+            // HDRI restore failed
+          }
+        }
 
-              // Find best download format
-              const formats = data?.gltf || data?.glb ? data : (data?.formats || data);
-              let downloadUrl = null;
-              for (const key of ['glb', 'gltf', 'usdz', 'source']) {
-                if (formats[key]?.url) { downloadUrl = formats[key].url; break; }
-              }
-              if (!downloadUrl) {
-                for (const [, value] of Object.entries(formats)) {
-                  if (value && typeof value === 'object' && value.url) { downloadUrl = value.url; break; }
+        // Restore imported models
+        if (sceneData.importedModels?.length > 0) {
+          for (const model of sceneData.importedModels) {
+            if (cancelled) return;
+            if (model.source === 'sketchfab' && model.uid) {
+              try {
+                const res = await fetch(`http://localhost:5174/api/sketchfab/models/${model.uid}/download`);
+                const data = await res.json();
+                if (!res.ok) continue;
+
+                // Find best download format
+                const formats = data?.gltf || data?.glb ? data : (data?.formats || data);
+                let downloadUrl = null;
+                for (const key of ['glb', 'gltf', 'usdz', 'source']) {
+                  if (formats[key]?.url) { downloadUrl = formats[key].url; break; }
                 }
-              }
-              if (!downloadUrl) continue;
-
-              const addedId = await preview.addImportedModel(downloadUrl, {
-                id: model.id,
-                source: 'sketchfab',
-                title: model.name,
-                author: model.author,
-              });
-
-              if (addedId) {
-                // Apply saved transform for this imported model
-                const savedTransform = sceneData.transforms?.[model.id];
-                if (savedTransform) {
-                  preview.setObjectTransform(addedId, savedTransform);
+                if (!downloadUrl) {
+                  for (const [, value] of Object.entries(formats)) {
+                    if (value && typeof value === 'object' && value.url) { downloadUrl = value.url; break; }
+                  }
                 }
+                if (!downloadUrl) continue;
 
-                setImportedModels((prev) => [...prev, {
-                  id: addedId,
-                  uid: model.uid,
-                  name: model.name,
-                  author: model.author,
-                  thumbnailUrl: model.thumbnailUrl,
+                if (cancelled) return;
+
+                const addedId = await preview.addImportedModel(downloadUrl, {
+                  id: model.id,
                   source: 'sketchfab',
-                }]);
+                  title: model.name,
+                  author: model.author,
+                });
+
+                if (addedId) {
+                  // Apply saved transform for this imported model
+                  const savedTransform = sceneData.transforms?.[model.id];
+                  if (savedTransform) {
+                    preview.setObjectTransform(addedId, savedTransform);
+                  }
+
+                  setImportedModels((prev) => [...prev, {
+                    id: addedId,
+                    uid: model.uid,
+                    name: model.name,
+                    author: model.author,
+                    thumbnailUrl: model.thumbnailUrl,
+                    source: 'sketchfab',
+                  }]);
+                }
+              } catch {
+                // Import restore failed for this model
               }
-            } catch {
-              // Import restore failed for this model
             }
           }
         }
-      }
 
-      setSceneRestored(true);
+        if (!cancelled) setSceneRestored(true);
+      } finally {
+        restoreInFlightRef.current = false;
+      }
     }, 1500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [sceneData, sceneRestored]);
 
   const saveTitle = async (newTitle) => {

@@ -273,18 +273,13 @@ const ModelPreview = forwardRef(function ModelPreview({ modelPath, enableZoom = 
     const internals = sceneRef.current;
     if (!internals) return;
 
-    // Dispose previous HDRI
-    if (hdriRef.current.texture) {
-      hdriRef.current.texture.dispose();
-    }
-    if (hdriRef.current.envMap) {
-      hdriRef.current.envMap.dispose();
-    }
-
     if (!hdriRef.current.pmremGenerator) {
       hdriRef.current.pmremGenerator = new THREE.PMREMGenerator(internals.renderer);
       hdriRef.current.pmremGenerator.compileEquirectangularShader();
     }
+
+    const prevTexture = hdriRef.current.texture;
+    const prevEnvMap = hdriRef.current.envMap;
 
     const rgbeLoader = new RGBELoader();
     return new Promise((resolve, reject) => {
@@ -299,6 +294,10 @@ const ModelPreview = forwardRef(function ModelPreview({ modelPath, enableZoom = 
 
           hdriRef.current.texture = texture;
           hdriRef.current.envMap = envMap;
+
+          // Dispose previous textures after the new ones are applied
+          prevTexture?.dispose();
+          prevEnvMap?.dispose();
 
           resolve();
         },
